@@ -4,63 +4,37 @@ namespace App\Policies;
 
 use App\Models\Stage;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class StagePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can('stages.suivre') || $user->hasRole('admin_general');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Stage $stage): bool
     {
-        return false;
+        if ($user->hasRole('etudiant')) {
+            return $user->etudiant?->id === $stage->etudiant_id;
+        }
+        if ($user->hasRole('enseignant_encadreur')) {
+            return $user->enseignant?->id === $stage->encadreur_id;
+        }
+        return $user->hasAnyRole(['admin_general', 'responsable_formation']);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('stages.demander');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Stage $stage): bool
+    public function validate(User $user, Stage $stage): bool
     {
-        return false;
+        return $user->can('stages.valider') && $stage->peutEtreValide();
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Stage $stage): bool
+    public function affecterEncadreur(User $user): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Stage $stage): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Stage $stage): bool
-    {
-        return false;
+        return $user->can('stages.affecter_encadreur');
     }
 }
