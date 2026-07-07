@@ -42,7 +42,7 @@ class RoleAndPermissionSeeder extends Seeder
 
         $encadreur = Role::firstOrCreate(['name' => 'enseignant_encadreur']);
         $encadreur->givePermissionTo([
-            'stages.suivre', 'stages.evaluer', 'encadrements.gerer', 'encadrements.consulter',
+            'stages.valider', 'stages.suivre', 'stages.evaluer', 'encadrements.gerer', 'encadrements.consulter',
             'memoires.corriger', 'bibliotheque.consulter',
         ]);
 
