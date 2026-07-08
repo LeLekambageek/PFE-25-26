@@ -37,4 +37,9 @@ class StagePolicy
     {
         return $user->can('stages.affecter_encadreur');
     }
+
+    public function cloturer(User $user, Stage $stage): bool
+   {
+    return $user->can('stages.valider') && $stage->statut === 'valide';
+    }
 }

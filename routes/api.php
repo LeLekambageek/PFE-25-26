@@ -14,4 +14,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/stages', [StageController::class, 'store']);
     Route::post('/stages/{stage}/valider', [StageController::class, 'validerStage']);
     Route::post('/stages/{stage}/affecter-encadreur', [StageController::class, 'affecterEncadreur']);
+    Route::get('/stages/{stage}/journal', [StageController::class, 'journal']);
+    Route::post('/stages/{stage}/journal', [StageController::class, 'ajouterEntreeJournal']);
+    Route::post('/stages/{stage}/cloturer', [StageController::class, 'cloturer']);
 });

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Stage;
 use Illuminate\Validation\ValidationException;
+use App\Models\StageJournalEntry;
 
 class StageService
 {
@@ -42,4 +43,12 @@ class StageService
 
         return $stage->fresh();
     }
+
+    public function ajouterEntreeJournal(Stage $stage, int $auteurId, string $contenu): StageJournalEntry
+{
+    return $stage->journalEntries()->create([
+        'auteur_id' => $auteurId,
+        'contenu' => $contenu,
+    ]);
+}
 }
