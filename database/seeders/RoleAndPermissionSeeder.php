@@ -48,9 +48,9 @@ class RoleAndPermissionSeeder extends Seeder
 
         $etudiant = Role::firstOrCreate(['name' => 'etudiant']);
         $etudiant->givePermissionTo([
-            'stages.demander', 'memoires.proposer', 'memoires.deposer_version',
+            'stages.demander', 'stages.suivre', 'memoires.proposer', 'memoires.deposer_version',
             'encadrements.consulter', 'bibliotheque.consulter',
-        ]);
+]);
 
         $entreprise = Role::firstOrCreate(['name' => 'entreprise_partenaire']);
         $entreprise->givePermissionTo(['stages.evaluer']);
