@@ -41,4 +41,11 @@ class EncadrementService
 
         return $encadrement->fresh();
     }
+
+    public function modifier(Encadrement $encadrement, int $enseignantId): Encadrement
+    {
+    $encadrement->update(['enseignant_id' => $enseignantId]);
+
+    return $encadrement->fresh();
+    }
 }

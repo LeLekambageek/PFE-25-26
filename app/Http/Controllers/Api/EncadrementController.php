@@ -77,4 +77,14 @@ class EncadrementController extends Controller
 
         return response()->json($encadrement);
     }
+
+    public function modifier(Request $request, Encadrement $encadrement)
+    {
+    $this->authorize('update', $encadrement);
+
+    $data = $request->validate(['enseignant_id' => 'required|exists:enseignants,id']);
+    $encadrement = $this->encadrementService->modifier($encadrement, $data['enseignant_id']);
+
+    return response()->json($encadrement);
+    }
 }

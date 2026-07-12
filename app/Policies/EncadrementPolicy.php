@@ -28,6 +28,11 @@ class EncadrementPolicy
         return $user->can('encadrements.gerer');
     }
 
+    public function update(User $user, Encadrement $encadrement): bool
+    {
+    return $user->can('encadrements.gerer');
+    }
+
     public function ajouterEntree(User $user, Encadrement $encadrement): bool
     {
         return $this->view($user, $encadrement);

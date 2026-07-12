@@ -23,34 +23,43 @@ class RoleAndPermissionSeeder extends Seeder
             'bibliotheque.consulter', 'bibliotheque.archiver',
 
             'dashboards.consulter',
-    
+
             'utilisateurs.gerer', 'parametres.gerer',
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
-
+        
+        
         $admin = Role::firstOrCreate(['name' => 'admin_general']);
         $admin->givePermissionTo(Permission::all());
 
         $responsableFormation = Role::firstOrCreate(['name' => 'responsable_formation']);
         $responsableFormation->givePermissionTo([
-            'stages.valider', 'stages.affecter_encadreur', 'memoires.valider',
-            'soutenances.planifier', 'dashboards.consulter', 'bibliotheque.consulter',
+            'stages.suivre', 'stages.valider', 'stages.affecter_encadreur',
+            'encadrements.gerer', 'encadrements.consulter',
+            'memoires.valider',
+            'soutenances.planifier', 'soutenances.publier_resultats',
+            'dashboards.consulter', 'bibliotheque.consulter',
         ]);
 
+        
         $encadreur = Role::firstOrCreate(['name' => 'enseignant_encadreur']);
         $encadreur->givePermissionTo([
-            'stages.valider', 'stages.suivre', 'stages.evaluer', 'encadrements.gerer', 'encadrements.consulter',
-            'memoires.corriger', 'bibliotheque.consulter',
+            'stages.suivre', 'stages.valider', 'stages.evaluer',
+            'encadrements.consulter',
+            'memoires.corriger',
+            'bibliotheque.consulter',
         ]);
 
         $etudiant = Role::firstOrCreate(['name' => 'etudiant']);
         $etudiant->givePermissionTo([
-            'stages.demander', 'stages.suivre', 'memoires.proposer', 'memoires.deposer_version',
-            'encadrements.consulter', 'bibliotheque.consulter',
-]);
+            'stages.demander', 'stages.suivre',
+            'memoires.proposer', 'memoires.deposer_version',
+            'encadrements.consulter',
+            'bibliotheque.consulter',
+        ]);
 
         $entreprise = Role::firstOrCreate(['name' => 'entreprise_partenaire']);
         $entreprise->givePermissionTo(['stages.evaluer']);
