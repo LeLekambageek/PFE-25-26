@@ -37,7 +37,7 @@ class RoleAndPermissionSeeder extends Seeder
         $responsableFormation = Role::firstOrCreate(['name' => 'responsable_formation']);
         $responsableFormation->givePermissionTo([
             'stages.valider', 'stages.affecter_encadreur', 'memoires.valider',
-            'soutenances.planifier', 'dashboards.consulter', 'bibliotheque.consulter',
+            'soutenances.planifier', 'soutenances.planifier', 'dashboards.consulter', 'bibliotheque.consulter',
         ]);
 
         $encadreur = Role::firstOrCreate(['name' => 'enseignant_encadreur']);
