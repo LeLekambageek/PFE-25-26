@@ -46,7 +46,7 @@ class StageController extends Controller
 
     public function validerStage(Request $request, Stage $stage)
     {
-       $this->authorize('validate', $stage);
+        $this->authorize('validate', $stage);
         $stage = $this->stageService->valider($stage);
 
         return response()->json($stage);
@@ -63,27 +63,27 @@ class StageController extends Controller
     }
 
     public function ajouterEntreeJournal(Request $request, Stage $stage)
-{
-    $this->authorize('view', $stage);
+    {
+        $this->authorize('view', $stage);
 
-    $data = $request->validate(['contenu' => 'required|string']);
-    $entry = $this->stageService->ajouterEntreeJournal($stage, $request->user()->id, $data['contenu']);
+        $data = $request->validate(['contenu' => 'required|string']);
+        $entry = $this->stageService->ajouterEntreeJournal($stage, $request->user()->id, $data['contenu']);
 
-    return response()->json($entry, 201);
-}
+        return response()->json($entry->load('auteur'), 201);
+    }
 
-public function journal(Request $request, Stage $stage)
-{
-    $this->authorize('view', $stage);
+    public function journal(Request $request, Stage $stage)
+    {
+        $this->authorize('view', $stage);
 
-    return response()->json($stage->journalEntries()->with('auteur')->latest()->get());
-}
+        return response()->json($stage->journalEntries()->with('auteur')->latest()->get());
+    }
 
-public function cloturer(Request $request, Stage $stage)
-{
-    $this->authorize('cloturer', $stage);
-    $stage = $this->stageService->cloturerEtGenererAttestation($stage);
+    public function cloturer(Request $request, Stage $stage)
+    {
+        $this->authorize('cloturer', $stage);
+        $stage = $this->stageService->cloturerEtGenererAttestation($stage);
 
-    return response()->json($stage);
-}
+        return response()->json($stage);
+    }
 }
