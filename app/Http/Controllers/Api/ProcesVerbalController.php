@@ -5,15 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ProcesVerbal;
 use App\Models\Soutenance;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ProcesVerbalController extends Controller
 {
-    /**
-     * Liste des procès-verbaux d'une soutenance.
-     */
     public function index(Request $request, Soutenance $soutenance)
     {
         $this->authorize('view', $soutenance);
@@ -26,14 +24,11 @@ class ProcesVerbalController extends Controller
         return response()->json(['success' => true, 'data' => $pvs]);
     }
 
-    /**
-     * Générer un procès-verbal (après notation par le jury).
-     */
     public function generer(Request $request, Soutenance $soutenance)
     {
         $this->authorize('generer', [ProcesVerbal::class, $soutenance]);
 
-        $soutenance->load(['memoire.etudiant', 'jury.membre', 'notes']);
+        $soutenance->load(['memoire.etudiant', 'memoire.encadreur', 'jury.membre', 'notes.jury']);
 
         if ($soutenance->notes->isEmpty()) {
             return response()->json([
@@ -48,13 +43,14 @@ class ProcesVerbalController extends Controller
 
         $data = [
             'soutenance' => $soutenance,
+            'memoire' => $soutenance->memoire,
             'etudiant' => $soutenance->memoire->etudiant,
             'jury' => $soutenance->jury,
-            'note_finale' => $soutenance->note_finale,
-            'mention' => $soutenance->mention,
+            'notes' => $soutenance->notes,
             'commentaires' => $request->commentaires,
-            'date_generation' => now()->format('d/m/Y H:i'),
-            'genere_par' => Auth::user()->name,
+            'dateGeneration' => now()->format('d/m/Y H:i'),
+            'anneeAcademique' => now()->format('Y').' - '.now()->addYear()->format('Y'),
+            'generePar' => Auth::user()->name,
         ];
 
         if (! Storage::disk('public')->exists('pv_soutenances')) {
@@ -64,10 +60,8 @@ class ProcesVerbalController extends Controller
         $filename = 'pv_soutenance_'.$soutenance->id.'_'.now()->format('Ymd_His').'.pdf';
         $path = 'pv_soutenances/'.$filename;
 
-        // TODO: brancher la génération réelle du PDF (ex: barryvdh/laravel-dompdf)
-        // $pdf = Pdf::loadView('pdf.proces-verbal', $data);
-        // Storage::disk('public')->put($path, $pdf->output());
-        Storage::disk('public')->put($path, 'Procès-verbal de soutenance');
+        $pdf = Pdf::loadView('pdf.proces-verbal', $data)->setPaper('a4', 'portrait');
+        Storage::disk('public')->put($path, $pdf->output());
 
         $procesVerbal = ProcesVerbal::create([
             'soutenance_id' => $soutenance->id,
@@ -85,21 +79,13 @@ class ProcesVerbalController extends Controller
         ], 201);
     }
 
-    /**
-     * Afficher un procès-verbal spécifique.
-     */
     public function show(Request $request, Soutenance $soutenance, ProcesVerbal $procesVerbal)
     {
         $this->authorize('view', $procesVerbal);
-
         $procesVerbal->load(['generePar', 'soutenance.memoire.etudiant']);
-
         return response()->json(['success' => true, 'data' => $procesVerbal]);
     }
 
-    /**
-     * Télécharger un procès-verbal.
-     */
     public function download(Request $request, Soutenance $soutenance, ProcesVerbal $procesVerbal)
     {
         $this->authorize('view', $procesVerbal);
@@ -114,9 +100,6 @@ class ProcesVerbalController extends Controller
         );
     }
 
-    /**
-     * Supprimer un procès-verbal.
-     */
     public function destroy(Request $request, Soutenance $soutenance, ProcesVerbal $procesVerbal)
     {
         $this->authorize('delete', $procesVerbal);
@@ -130,9 +113,6 @@ class ProcesVerbalController extends Controller
         return response()->json(['success' => true, 'message' => 'Procès-verbal supprimé avec succès.']);
     }
 
-    /**
-     * Récupérer tous les PV d'un étudiant (utile pour la bibliothèque numérique).
-     */
     public function getByEtudiant(Request $request, int $etudiantId)
     {
         $user = $request->user();
@@ -150,9 +130,6 @@ class ProcesVerbalController extends Controller
         return response()->json(['success' => true, 'data' => $pvs]);
     }
 
-    /**
-     * Signer un procès-verbal.
-     */
     public function signer(Request $request, Soutenance $soutenance, ProcesVerbal $procesVerbal)
     {
         $this->authorize('signer', $procesVerbal);
