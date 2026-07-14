@@ -21,17 +21,22 @@ class RoleAndPermissionSeeder extends Seeder
             'soutenances.planifier', 'soutenances.noter', 'soutenances.publier_resultats',
 
             'bibliotheque.consulter', 'bibliotheque.archiver',
+            'bibliotheque.supprimer', 'bibliotheque.modifier_metadonnees',
+
+            'entreprises.consulter', 'entreprises.ajouter', 'entreprises.modifier', 'entreprises.supprimer',
 
             'dashboards.consulter',
 
-            'utilisateurs.gerer', 'parametres.gerer',
+            'utilisateurs.consulter', 'utilisateurs.creer', 'utilisateurs.modifier',
+            'utilisateurs.desactiver', 'utilisateurs.supprimer',
+            'utilisateurs.attribuer_role', 'utilisateurs.retirer_role',
+            'parametres.gerer',
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
-        
-        
+
         $admin = Role::firstOrCreate(['name' => 'admin_general']);
         $admin->givePermissionTo(Permission::all());
 
@@ -41,16 +46,18 @@ class RoleAndPermissionSeeder extends Seeder
             'encadrements.gerer', 'encadrements.consulter',
             'memoires.valider',
             'soutenances.planifier', 'soutenances.publier_resultats',
-            'dashboards.consulter', 'bibliotheque.consulter',
+            'dashboards.consulter',
+            'bibliotheque.consulter', 'bibliotheque.archiver',
+            'entreprises.consulter',
         ]);
 
-        
         $encadreur = Role::firstOrCreate(['name' => 'enseignant_encadreur']);
         $encadreur->givePermissionTo([
             'stages.suivre', 'stages.valider', 'stages.evaluer',
             'encadrements.consulter',
             'memoires.corriger',
             'bibliotheque.consulter',
+            'dashboards.consulter',
         ]);
 
         $etudiant = Role::firstOrCreate(['name' => 'etudiant']);
