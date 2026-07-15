@@ -151,6 +151,7 @@ class SoutenanceController extends Controller
 
         $moyenne = $soutenance->notes()->avg('note');
         $mention = match (true) {
+            $moyenne >= 18 => 'Excellent',
             $moyenne >= 16 => 'Très Bien',
             $moyenne >= 14 => 'Bien',
             $moyenne >= 12 => 'Assez Bien',

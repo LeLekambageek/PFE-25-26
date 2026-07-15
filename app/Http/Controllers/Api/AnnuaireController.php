@@ -23,16 +23,17 @@ class AnnuaireController extends Controller
         );
     }
 
-    public function enseignants(Request $request)
+   public function enseignants(Request $request)
     {
-        $this->authorize('create', Encadrement::class);
+    $this->authorize('create', Encadrement::class);
 
-        return response()->json(
-            Enseignant::with('user')->get()->map(fn ($e) => [
-                'id' => $e->id,
-                'nom' => $e->user->name,
-                'specialite' => $e->specialite,
-            ])
-        );
+    return response()->json(
+        Enseignant::with('user')->get()->map(fn ($e) => [
+            'id' => $e->id,
+            'user_id' => $e->user_id,
+            'nom' => $e->user->name,
+            'specialite' => $e->specialite,
+        ])
+    );
     }
 }
