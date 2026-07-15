@@ -51,6 +51,12 @@ class RoleAndPermissionSeeder extends Seeder
             'entreprises.consulter',
         ]);
 
+        $responsableRelationEntreprise = Role::firstOrCreate(['name' => 'responsable_relation_entreprise']);
+        $responsableRelationEntreprise->givePermissionTo([
+            'entreprises.consulter', 'entreprises.ajouter', 'entreprises.modifier', 'entreprises.supprimer',
+            'stages.suivre',
+        ]);
+
         $encadreur = Role::firstOrCreate(['name' => 'enseignant_encadreur']);
         $encadreur->givePermissionTo([
             'stages.suivre', 'stages.valider', 'stages.evaluer',

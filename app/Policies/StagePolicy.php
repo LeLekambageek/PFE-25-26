@@ -20,7 +20,7 @@ class StagePolicy
         if ($user->hasRole('enseignant_encadreur')) {
             return $user->enseignant?->id === $stage->encadreur_id;
         }
-        return $user->hasAnyRole(['admin_general', 'responsable_formation']);
+        return $user->hasAnyRole(['admin_general', 'responsable_formation', 'responsable_relation_entreprise']);
     }
 
     public function create(User $user): bool
@@ -39,7 +39,7 @@ class StagePolicy
     }
 
     public function cloturer(User $user, Stage $stage): bool
-   {
-    return $user->can('stages.valider') && $stage->statut === 'valide';
+    {
+        return $user->can('stages.valider') && $stage->statut === 'valide';
     }
 }
