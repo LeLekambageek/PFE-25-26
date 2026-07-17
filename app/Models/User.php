@@ -7,9 +7,9 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -18,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles;
+    use HasFactory, HasApiTokens, HasRoles;
 
     /**
      * Get the attributes that should be cast.
@@ -41,5 +41,25 @@ class User extends Authenticatable
     public function enseignant(): HasOne
     {
         return $this->hasOne(Enseignant::class);
+    }
+
+    public function memoires(): HasMany
+    {
+        return $this->hasMany(Memoire::class, 'etudiant_id');
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->latest('date_creation');
+    }
+
+    public function notificationsNonLues(): HasMany
+    {
+        return $this->notifications()->where('statut', 'non_lue');
+    }
+
+    public function soutenanceJury(): HasMany
+    {
+        return $this->hasMany(SoutenanceJury::class, 'user_id');
     }
 }

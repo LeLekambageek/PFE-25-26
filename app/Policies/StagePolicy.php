@@ -25,7 +25,12 @@ class StagePolicy
 
     public function create(User $user): bool
     {
-        return $user->can('stages.demander');
+        return $user->hasAnyRole(['admin_general', 'responsable_formation']);
+    }
+
+    public function associerEntreprise(User $user): bool
+    {
+        return $user->hasAnyRole(['admin_general', 'responsable_formation']);
     }
 
     public function validate(User $user, Stage $stage): bool

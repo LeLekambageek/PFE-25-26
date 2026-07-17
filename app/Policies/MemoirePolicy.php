@@ -33,11 +33,13 @@ class MemoirePolicy
     }
 
     /**
-     * Validation du sujet, rejet, affectation encadreur.
+     * Validation du sujet, rejet, demande de modification : admin/responsable de
+     * formation, OU l'encadreur déjà assigné à CE mémoire (cas du sujet proposé
+     * par l'étudiant, soumis à son encadreur).
      */
-    public function valider(User $user): bool
+    public function valider(User $user, Memoire $memoire): bool
     {
-        return $user->can('memoires.valider');
+        return $user->can('memoires.valider') || $memoire->encadreur_id === $user->id;
     }
 
     public function affecterEncadreur(User $user): bool

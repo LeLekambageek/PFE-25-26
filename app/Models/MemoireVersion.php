@@ -14,7 +14,18 @@ class MemoireVersion extends Model
     protected $fillable = [
         'memoire_id', 'soumis_par_id', 'numero_version',
         'fichier_path', 'fichier_nom_original', 'statut',
+        'pourcentage_avancement', 'verrouille', 'date_verrouillage',
+        'annotations', 'commentaires_encadreur', 'recommandations',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'pourcentage_avancement' => 'integer',
+            'verrouille' => 'boolean',
+            'date_verrouillage' => 'datetime',
+        ];
+    }
 
     public function memoire(): BelongsTo
     {
@@ -29,5 +40,15 @@ class MemoireVersion extends Model
     public function corrections(): HasMany
     {
         return $this->hasMany(MemoireCorrection::class);
+    }
+
+    public function estFinale(): bool
+    {
+        return $this->numero_version === 'finale';
+    }
+
+    public function mettreAJourAvancement(int $pourcentage): void
+    {
+        $this->update(['pourcentage_avancement' => $pourcentage]);
     }
 }

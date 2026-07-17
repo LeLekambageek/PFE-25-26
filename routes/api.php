@@ -10,6 +10,15 @@ use App\Http\Controllers\Api\MemoireVersionController;
 use App\Http\Controllers\Api\SoutenanceController;
 use App\Http\Controllers\Api\SoutenanceNoteController;
 use App\Http\Controllers\Api\ProcesVerbalController;
+use App\Http\Controllers\Api\EntrepriseController;
+use App\Http\Controllers\Api\CandidatureStageController;
+use App\Http\Controllers\Api\RapportStageController;
+use App\Http\Controllers\Api\CreneauSoutenanceController;
+use App\Http\Controllers\Api\EtudiantController;
+use App\Http\Controllers\Api\EncadreurController;
+use App\Http\Controllers\Api\AdministrationController;
+use App\Http\Controllers\Api\JuryController;
+use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -31,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/encadrements', [EncadrementController::class, 'index']);
     Route::post('/encadrements', [EncadrementController::class, 'store']);
     Route::put('/encadrements/{encadrement}', [EncadrementController::class, 'modifier']);
+    Route::get('/encadrements/{encadrement}/entree', [EncadrementController::class, 'entrees']);
     Route::post('/encadrements/{encadrement}/entree', [EncadrementController::class, 'ajouterEntree']);
     Route::post('/encadrements/{encadrement}/rendez-vous', [EncadrementController::class, 'planifierRdv']);
     Route::post('/encadrements/{encadrement}/cloturer', [EncadrementController::class, 'cloturer']);
@@ -43,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('memoires', MemoireController::class);
     Route::post('memoires/{memoire}/valider', [MemoireController::class, 'valider']);
     Route::post('memoires/{memoire}/rejeter', [MemoireController::class, 'rejeter']);
+    Route::post('memoires/{memoire}/demander-modification', [MemoireController::class, 'demanderModification']);
     Route::post('memoires/{memoire}/affecter-encadreur', [MemoireController::class, 'affecterEncadreur']);
 
     // Versions de memoire
@@ -73,6 +84,77 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{procesVerbal}', [ProcesVerbalController::class, 'destroy']);
     });
     Route::get('etudiants/{etudiantId}/proces-verbaux', [ProcesVerbalController::class, 'getByEtudiant']);
+
+    // Entreprises
+    Route::apiResource('entreprises', EntrepriseController::class);
+
+    // Candidatures de stage
+    Route::apiResource('candidatures-stage', CandidatureStageController::class);
+    Route::post('candidatures-stage/{candidature}/affecter-stage', [CandidatureStageController::class, 'affecterStage']);
+
+    // Rapports de stage
+    Route::apiResource('rapports-stage', RapportStageController::class)->except(['update']);
+    Route::post('rapports-stage/{rapport}/corriger', [RapportStageController::class, 'corriger']);
+    Route::post('rapports-stage/{rapport}/valider', [RapportStageController::class, 'valider']);
+    Route::get('rapports-stage/{rapport}/download', [RapportStageController::class, 'download']);
+
+    // Créneaux de soutenance
+    Route::apiResource('creneaux-soutenance', CreneauSoutenanceController::class);
+    Route::post('creneaux-soutenance/{creneau}/reserver', [CreneauSoutenanceController::class, 'reserver']);
+    Route::post('creneaux-soutenance/{creneau}/annuler', [CreneauSoutenanceController::class, 'annuler']);
+    Route::post('creneaux-soutenance/{creneau}/valider', [CreneauSoutenanceController::class, 'validerReservation']);
+    Route::get('creneaux-soutenance-disponibles', [CreneauSoutenanceController::class, 'disponiblesPourEtudiant']);
+
+    // Étudiant 
+    Route::get('etudiants', [EtudiantController::class, 'index']);
+    Route::get('etudiants/{etudiant}', [EtudiantController::class, 'show']);
+    Route::prefix('mon-espace')->group(function () {
+        Route::get('stages', [EtudiantController::class, 'mesStages']);
+        Route::get('stage-actif', [EtudiantController::class, 'monStageActif']);
+        Route::get('memoires', [EtudiantController::class, 'mesMemoires']);
+        Route::get('encadrements', [EtudiantController::class, 'mesEncadrements']);
+        Route::get('candidatures', [EtudiantController::class, 'mesCandidatures']);
+        Route::get('rapports', [EtudiantController::class, 'mesRapports']);
+        Route::get('soutenance', [EtudiantController::class, 'informationsSoutenance']);
+        Route::get('resultats-soutenance', [EtudiantController::class, 'resultatsSoutenance']);
+    });
+
+    // Encadreur
+    Route::get('mes-etudiants-encadres', [EncadreurController::class, 'mesEtudiants']);
+    Route::get('etudiants-encadres/{etudiantId}/stage', [EncadreurController::class, 'informationsStageEtudiant']);
+
+    // Administration
+    Route::prefix('administration')->group(function () {
+        Route::post('etudiants', [AdministrationController::class, 'creerCompteEtudiant']);
+        Route::get('enseignants', [AdministrationController::class, 'gererComptesEnseignants']);
+        Route::post('enseignants', [AdministrationController::class, 'creerCompteEnseignant']);
+        Route::post('enseignants/{enseignantId}/role-encadreur', [AdministrationController::class, 'attribuerRoleEncadreur']);
+        Route::put('stages/{etudiantId}/entreprise', [AdministrationController::class, 'associerEntrepriseEtudiant']);
+        Route::get('memoires-eligibles-soutenance', [AdministrationController::class, 'memoiresValidesFinale']);
+        Route::get('jury', [AdministrationController::class, 'gererComptesJury']);
+        Route::post('jury', [AdministrationController::class, 'creerCompteJury']);
+        Route::post('jury/{jury}/reactiver', [AdministrationController::class, 'reactiverJury']);
+    });
+
+    // Jury 
+    Route::prefix('jury')->group(function () {
+        Route::get('mes-soutenances', [JuryController::class, 'mesSoutenances']);
+        Route::get('soutenances/{soutenance}', [JuryController::class, 'informationsSoutenance']);
+        Route::get('soutenances/{soutenance}/memoire', [JuryController::class, 'consulterMemoire']);
+        Route::get('soutenances/{soutenance}/memoire/download', [JuryController::class, 'telechargerMemoire']);
+        Route::get('soutenances/{soutenance}/acces', [JuryController::class, 'verifierAcces']);
+        Route::post('soutenances/{soutenance}/valider-notes', [JuryController::class, 'validerMesNotes']);
+    });
+
+    // Notifications
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('non-lues/count', [NotificationController::class, 'countUnread']);
+        Route::post('tout-marquer-lu', [NotificationController::class, 'markAllAsRead']);
+        Route::get('{notification}', [NotificationController::class, 'show']);
+        Route::post('{notification}/lu', [NotificationController::class, 'markAsRead']);
+        Route::delete('{notification}', [NotificationController::class, 'destroy']);
+    });
 
     // Tableaux de bord
     Route::prefix('dashboard')->group(function () {

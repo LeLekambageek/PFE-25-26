@@ -25,4 +25,21 @@ class Enseignant extends Model
     {
         return $this->hasMany(Stage::class, 'encadreur_id');
     }
+
+    public function encadrements(): HasMany
+    {
+        return $this->hasMany(Encadrement::class, 'enseignant_id');
+    }
+
+    public function etudiantsEncadres(): \Illuminate\Support\Collection
+    {
+        $etudiantIds = $this->encadrements()->where('statut', 'actif')->pluck('etudiant_id')->unique();
+
+        return Etudiant::whereIn('id', $etudiantIds)->get();
+    }
+
+    public function capaciteAtteinte(): bool
+    {
+        return $this->encadrements()->where('statut', 'actif')->count() >= $this->capacite_encadrement;
+    }
 }

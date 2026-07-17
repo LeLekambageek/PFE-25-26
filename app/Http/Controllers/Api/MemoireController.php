@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Encadrement;
 use App\Models\Memoire;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class MemoireController extends Controller
@@ -45,17 +47,66 @@ class MemoireController extends Controller
 
         $user = $request->user();
 
+        // Cas 1 : l'étudiant propose son propre sujet. Il est soumis à validation
+        // par son encadreur déjà assigné (s'il en a un).
         if ($user->hasRole('etudiant')) {
-            $data['etudiant_id'] = $user->id;
-        } else {
-            $etudiantCible = User::find($data['etudiant_id']);
-            if (! $etudiantCible || ! $etudiantCible->hasRole('etudiant')) {
-                return response()->json(['message' => "L'utilisateur cible n'a pas le role etudiant."], 422);
+            $encadrement = Encadrement::where('etudiant_id', $user->etudiant?->id)
+                ->where('statut', 'actif')
+                ->whereIn('type', ['memoire', 'stage'])
+                ->latest()
+                ->first();
+
+            $memoire = Memoire::create([
+                'titre' => $data['titre'],
+                'description' => $data['description'] ?? null,
+                'etudiant_id' => $user->id,
+                'encadreur_id' => $encadrement?->enseignant?->user_id,
+                'propose_par_id' => $user->id,
+                'statut' => 'propose',
+                'date_proposition' => now(),
+            ]);
+
+            if ($memoire->encadreur) {
+                app(NotificationService::class)->nouvellePropositionSujet($memoire);
             }
+
+            return response()->json($memoire, 201);
+        }
+
+        $etudiantCible = User::find($data['etudiant_id']);
+        if (! $etudiantCible || ! $etudiantCible->hasRole('etudiant')) {
+            return response()->json(['message' => "L'utilisateur cible n'a pas le role etudiant."], 422);
+        }
+
+        // Cas 2 : l'encadreur propose directement un sujet à un étudiant : pas de
+        // validation nécessaire, l'étudiant peut démarrer immédiatement.
+        if ($user->hasRole('enseignant_encadreur')) {
+            $memoire = Memoire::create([
+                'titre' => $data['titre'],
+                'description' => $data['description'] ?? null,
+                'etudiant_id' => $etudiantCible->id,
+                'encadreur_id' => $user->id,
+                'propose_par_id' => $user->id,
+                'statut' => 'valide',
+                'date_proposition' => now(),
+                'date_validation' => now(),
+            ]);
+
+            if ($etudiantCible->etudiant && $user->enseignant) {
+                Encadrement::firstOrCreate([
+                    'etudiant_id' => $etudiantCible->etudiant->id,
+                    'enseignant_id' => $user->enseignant->id,
+                    'type' => 'memoire',
+                ], ['statut' => 'actif']);
+            }
+
+            return response()->json($memoire, 201);
         }
 
         $memoire = Memoire::create([
-            ...$data,
+            'titre' => $data['titre'],
+            'description' => $data['description'] ?? null,
+            'etudiant_id' => $etudiantCible->id,
             'propose_par_id' => $user->id,
             'statut' => 'propose',
             'date_proposition' => now(),
@@ -67,7 +118,7 @@ class MemoireController extends Controller
 
     public function valider(Request $request, Memoire $memoire)
     {
-        $this->authorize('valider', Memoire::class);
+        $this->authorize('valider', $memoire);
 
         $data = $request->validate([
             'commentaire_validation' => 'nullable|string',
@@ -85,7 +136,7 @@ class MemoireController extends Controller
 
     public function rejeter(Request $request, Memoire $memoire)
     {
-        $this->authorize('valider', Memoire::class);
+        $this->authorize('valider', $memoire);
 
         $data = $request->validate([
             'commentaire_validation' => 'required|string',
@@ -96,6 +147,27 @@ class MemoireController extends Controller
             'date_validation' => now(),
             'commentaire_validation' => $data['commentaire_validation'],
         ]);
+
+        return response()->json($memoire);
+    }
+
+    /**
+     * L'encadreur demande une modification sur un sujet proposé par l'étudiant.
+     */
+    public function demanderModification(Request $request, Memoire $memoire)
+    {
+        $this->authorize('valider', $memoire);
+
+        $data = $request->validate([
+            'commentaire_validation' => 'required|string',
+        ]);
+
+        $memoire->update([
+            'statut' => 'corrections_demandees',
+            'commentaire_validation' => $data['commentaire_validation'],
+        ]);
+
+        app(NotificationService::class)->sujetAModifier($memoire);
 
         return response()->json($memoire);
     }

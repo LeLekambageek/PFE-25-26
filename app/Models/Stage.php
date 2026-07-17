@@ -42,6 +42,11 @@ class Stage extends Model
         return $this->hasMany(StageJournalEntry::class);
     }
 
+    public function rapports(): HasMany
+    {
+        return $this->hasMany(RapportStage::class);
+    }
+
     public function peutEtreValide(): bool
     {
         return $this->statut === 'en_attente';

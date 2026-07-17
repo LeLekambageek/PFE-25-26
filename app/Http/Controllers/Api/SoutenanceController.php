@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Document;
 use App\Models\Memoire;
 use App\Models\Soutenance;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class SoutenanceController extends Controller
@@ -62,6 +64,10 @@ class SoutenanceController extends Controller
             'statut' => 'planifiee',
         ]);
 
+        $notificationService = app(NotificationService::class);
+        $notificationService->soutenancePlanifiee($soutenance);
+        $notificationService->soutenanceProgrammee($soutenance);
+
         return response()->json($soutenance, 201);
     }
 
@@ -100,20 +106,35 @@ class SoutenanceController extends Controller
             'membres' => 'required|array|min:1',
             'membres.*.user_id' => 'required|exists:users,id',
             'membres.*.role_jury' => 'required|in:president,rapporteur,examinateur',
+            'membres.*.date_debut_acces' => 'nullable|date',
+            'membres.*.date_fin_acces' => 'nullable|date|after:membres.*.date_debut_acces',
         ]);
 
+        $notificationService = app(NotificationService::class);
+
         foreach ($data['membres'] as $membre) {
-            $enseignant = User::findOrFail($membre['user_id']);
-            if (! $enseignant->hasAnyRole(['jury_soutenance', 'enseignant_encadreur'])) {
+            $membreUser = User::findOrFail($membre['user_id']);
+            if (! $membreUser->hasAnyRole(['jury_soutenance', 'enseignant_encadreur'])) {
                 return response()->json([
-                    'message' => "L'utilisateur {$enseignant->name} n'a pas de rôle jury/enseignant.",
+                    'message' => "L'utilisateur {$membreUser->name} n'a pas de rôle jury/enseignant.",
                 ], 422);
+            }
+
+            if (! $membreUser->hasRole('jury_soutenance')) {
+                $membreUser->assignRole('jury_soutenance');
             }
 
             $soutenance->jury()->updateOrCreate(
                 ['user_id' => $membre['user_id']],
-                ['role_jury' => $membre['role_jury']]
+                [
+                    'role_jury' => $membre['role_jury'],
+                    'date_debut_acces' => $membre['date_debut_acces'] ?? now(),
+                    'date_fin_acces' => $membre['date_fin_acces'] ?? $soutenance->date_soutenance?->copy()->addDay(),
+                    'actif' => true,
+                ]
             );
+
+            $notificationService->nouvelleSoutenanceJury($soutenance, $membreUser);
         }
 
         return response()->json($soutenance->load('jury.membre'));
@@ -131,7 +152,15 @@ class SoutenanceController extends Controller
             'convoque_a' => now(),
         ]);
 
-        // L'envoi effectif (mail/notification) sera branché sur une Notification Laravel dédiée.
+        $notificationService = app(NotificationService::class);
+        foreach ($soutenance->jury()->with('membre')->get() as $juryRow) {
+            if ($juryRow->membre) {
+                $notificationService->convocationJury($soutenance, $juryRow->membre);
+            }
+        }
+        $notificationService->convocationGeneree($soutenance);
+        $notificationService->convocationDisponible($soutenance);
+
         return response()->json([
             'message' => 'Convocations envoyées aux membres du jury.',
             'jury' => $soutenance->jury()->with('membre')->get(),
@@ -139,14 +168,17 @@ class SoutenanceController extends Controller
     }
 
     /**
-     * Publication des résultats une fois toutes les notes saisies.
+     * Publication des résultats une fois que tous les membres du jury ont
+     * validé définitivement leurs notes.
      */
     public function publierResultats(Request $request, Soutenance $soutenance)
     {
         $this->authorize('publierResultats', Soutenance::class);
 
-        if ($soutenance->notes()->count() === 0) {
-            return response()->json(['message' => "Aucune note saisie pour cette soutenance."], 422);
+        if (! $soutenance->tousLesJuryOntNote()) {
+            return response()->json([
+                'message' => "Tous les membres du jury doivent avoir validé définitivement leurs notes avant de publier les résultats.",
+            ], 422);
         }
 
         $moyenne = $soutenance->notes()->avg('note');
@@ -167,6 +199,23 @@ class SoutenanceController extends Controller
         ]);
 
         $soutenance->memoire->update(['statut' => 'soutenu']);
+
+        // NB du cahier de charge : une fois la note reçue, le mémoire part
+        // directement dans la bibliothèque numérique.
+        Document::firstOrCreate(
+            ['memoire_id' => $soutenance->memoire_id],
+            [
+                'type_document' => 'memoire',
+                'titre' => $soutenance->memoire->titre,
+                'auteur' => $soutenance->memoire->etudiant->name,
+                'annee' => now()->year,
+                'mention' => $mention,
+                'fichier_path' => optional($soutenance->memoire->derniereVersion)->fichier_path,
+                'archive_par_id' => $request->user()->id,
+            ]
+        );
+
+        app(NotificationService::class)->resultatsPublies($soutenance);
 
         return response()->json($soutenance);
     }

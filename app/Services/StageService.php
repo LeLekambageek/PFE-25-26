@@ -17,6 +17,24 @@ class StageService
         ]);
     }
 
+    /**
+     * Affectation directe et définitive d'un stage par l'administration
+     * (l'étudiant ne peut pas créer/refuser une affectation).
+     */
+    public function affecterDirectement(array $data): Stage
+    {
+        return Stage::create([
+            'etudiant_id' => $data['etudiant_id'],
+            'entreprise_id' => $data['entreprise_id'],
+            'encadreur_id' => $data['encadreur_id'] ?? null,
+            'titre' => $data['titre'],
+            'description' => $data['description'] ?? null,
+            'date_debut' => $data['date_debut'],
+            'date_fin' => $data['date_fin'],
+            'statut' => 'valide',
+        ]);
+    }
+
     public function valider(Stage $stage): Stage
     {
         if (! $stage->peutEtreValide()) {

@@ -54,4 +54,19 @@ class Soutenance extends Model
     {
         return $this->jury()->where('user_id', $user->id)->exists();
     }
+
+    public function estTerminee(): bool
+    {
+        return $this->statut === 'terminee' || $this->resultats_publies;
+    }
+
+    public function resultatsSontPublies(): bool
+    {
+        return (bool) $this->resultats_publies;
+    }
+
+    public function tousLesJuryOntNote(): bool
+    {
+        return $this->jury()->exists() && $this->jury()->where('notes_validees', false)->doesntExist();
+    }
 }

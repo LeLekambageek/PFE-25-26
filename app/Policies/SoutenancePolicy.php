@@ -49,11 +49,26 @@ class SoutenancePolicy
     }
 
     /**
-     * Notation : uniquement un membre du jury affecté à CETTE soutenance.
+     * Notation : uniquement un membre du jury affecté à CETTE soutenance, avec un
+     * accès actif et des notes pas encore verrouillées.
      */
     public function noter(User $user, Soutenance $soutenance): bool
     {
-        return $user->can('soutenances.noter') && $soutenance->estMembreDuJury($user);
+        if (! $user->can('soutenances.noter')) {
+            return false;
+        }
+
+        $juryRow = $soutenance->jury()->where('user_id', $user->id)->first();
+
+        return $juryRow && $juryRow->peutNoter();
+    }
+
+    /**
+     * Verrouillage définitif des notes du juré courant pour cette soutenance.
+     */
+    public function validerNotesJury(User $user, Soutenance $soutenance): bool
+    {
+        return $this->noter($user, $soutenance);
     }
 
     /**

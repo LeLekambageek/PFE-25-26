@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Encadrement;
 use App\Services\EncadrementService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class EncadrementController extends Controller
@@ -46,12 +47,30 @@ class EncadrementController extends Controller
         return response()->json($encadrement, 201);
     }
 
+    /**
+     * Fil de discussion entre étudiant et encadreur (espace de discussion).
+     */
+    public function entrees(Request $request, Encadrement $encadrement)
+    {
+        $this->authorize('view', $encadrement);
+
+        return response()->json($encadrement->entries()->with('auteur')->latest()->get());
+    }
+
     public function ajouterEntree(Request $request, Encadrement $encadrement)
     {
         $this->authorize('ajouterEntree', $encadrement);
 
         $data = $request->validate(['contenu' => 'required|string']);
         $entry = $this->encadrementService->ajouterEntree($encadrement, $request->user()->id, $data['contenu']);
+
+        $user = $request->user();
+        $notificationService = app(NotificationService::class);
+        if ($user->hasRole('enseignant_encadreur')) {
+            $notificationService->nouveauCommentaireEncadreur($encadrement, $data['contenu']);
+        } elseif ($user->hasRole('etudiant')) {
+            $notificationService->reponseEtudiant($encadrement);
+        }
 
         return response()->json($entry, 201);
     }
@@ -66,6 +85,8 @@ class EncadrementController extends Controller
         ]);
 
         $rdv = $this->encadrementService->planifierRdv($encadrement, $data['date_prevue'], $data['sujet'] ?? null);
+
+        app(NotificationService::class)->nouveauRendezVous($encadrement);
 
         return response()->json($rdv, 201);
     }

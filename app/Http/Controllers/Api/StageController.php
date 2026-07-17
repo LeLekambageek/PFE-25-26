@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Encadrement;
 use App\Models\Stage;
+use App\Services\NotificationService;
 use App\Services\StageService;
 use Illuminate\Http\Request;
 
@@ -27,21 +29,41 @@ class StageController extends Controller
         return response()->json($query->paginate(20));
     }
 
+    /**
+     * Affectation d'un stage à un étudiant par l'administration. L'étudiant ne
+     * peut ni créer ni refuser cette affectation : elle est directement définitive
+     * (statut "valide").
+     */
     public function store(Request $request)
     {
         $this->authorize('create', Stage::class);
 
         $data = $request->validate([
-            'entreprise_id' => 'nullable|exists:entreprises,id',
+            'etudiant_id' => 'required|exists:etudiants,id',
+            'entreprise_id' => 'required|exists:entreprises,id',
+            'encadreur_id' => 'nullable|exists:enseignants,id',
             'titre' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date_debut' => 'required|date',
             'date_fin' => 'required|date|after:date_debut',
         ]);
 
-        $stage = $this->stageService->creerDemande($data, $request->user()->etudiant->id);
+        $stage = $this->stageService->affecterDirectement($data);
 
-        return response()->json($stage, 201);
+        $notificationService = app(NotificationService::class);
+        $notificationService->affectationStage($stage);
+
+        if (! empty($data['encadreur_id'])) {
+            $encadrement = Encadrement::firstOrCreate([
+                'etudiant_id' => $data['etudiant_id'],
+                'enseignant_id' => $data['encadreur_id'],
+                'type' => 'stage',
+            ], ['statut' => 'actif']);
+
+            $notificationService->affectationEncadreur($encadrement);
+        }
+
+        return response()->json($stage->load(['etudiant.user', 'entreprise', 'encadreur.user']), 201);
     }
 
     public function validerStage(Request $request, Stage $stage)

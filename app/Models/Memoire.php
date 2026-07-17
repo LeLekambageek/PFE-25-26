@@ -54,4 +54,27 @@ class Memoire extends Model
     {
         return $this->hasOne(Soutenance::class);
     }
+
+    public function estProposeParEtudiant(): bool
+    {
+        return $this->propose_par_id === $this->etudiant_id;
+    }
+
+    public function peutDemanderSoutenance(): bool
+    {
+        return $this->statut === 'valide_final'
+            && ! $this->soutenance()->exists()
+            && (int) optional($this->derniereVersion)->pourcentage_avancement >= 80;
+    }
+
+    public function estVerrouillePourSoutenance(): bool
+    {
+        $soutenance = $this->soutenance;
+
+        if (! $soutenance || ! $soutenance->date_soutenance) {
+            return false;
+        }
+
+        return now()->greaterThanOrEqualTo($soutenance->date_soutenance->copy()->startOfDay()->subDays(5));
+    }
 }
