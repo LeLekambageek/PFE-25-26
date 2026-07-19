@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Notifications\ConvocationSoutenance;
 use App\Http\Controllers\Controller;
 use App\Models\Memoire;
 use App\Models\Soutenance;
@@ -35,9 +36,6 @@ class SoutenanceController extends Controller
         return response()->json($soutenance->load(['memoire.etudiant', 'memoire.encadreur', 'jury.membre', 'notes.jury']));
     }
 
-    /**
-     * Planification d'une soutenance (calendrier, salle, horaire).
-     */
     public function store(Request $request)
     {
         $this->authorize('create', Soutenance::class);
@@ -89,9 +87,6 @@ class SoutenanceController extends Controller
         return response()->json(null, 204);
     }
 
-    /**
-     * Composition automatique/manuelle du jury (président, rapporteur, examinateur).
-     */
     public function composerJury(Request $request, Soutenance $soutenance)
     {
         $this->authorize('gererJury', Soutenance::class);
@@ -119,9 +114,6 @@ class SoutenanceController extends Controller
         return response()->json($soutenance->load('jury.membre'));
     }
 
-    /**
-     * Génération et envoi des convocations au jury.
-     */
     public function envoyerConvocations(Request $request, Soutenance $soutenance)
     {
         $this->authorize('gererJury', Soutenance::class);
@@ -131,16 +123,12 @@ class SoutenanceController extends Controller
             'convoque_a' => now(),
         ]);
 
-        // L'envoi effectif (mail/notification) sera branché sur une Notification Laravel dédiée.
         return response()->json([
             'message' => 'Convocations envoyées aux membres du jury.',
             'jury' => $soutenance->jury()->with('membre')->get(),
         ]);
     }
 
-    /**
-     * Publication des résultats une fois toutes les notes saisies.
-     */
     public function publierResultats(Request $request, Soutenance $soutenance)
     {
         $this->authorize('publierResultats', Soutenance::class);

@@ -15,7 +15,6 @@ class Entreprise extends Model
         'contact_nom', 'contact_email', 'contact_telephone',
     ];
 
-    // Une entreprise partenaire peut accueillir plusieurs étudiants en stage
     public function stages(): HasMany
     {
         return $this->hasMany(Stage::class);

@@ -7,9 +7,6 @@ use App\Models\User;
 
 class MemoirePolicy
 {
-    /**
-     * Tout utilisateur authentifié lié au projet peut lister (le controller filtre par rôle).
-     */
     public function viewAny(User $user): bool
     {
         return $user->hasAnyRole([
@@ -24,17 +21,11 @@ class MemoirePolicy
             || $memoire->encadreur_id === $user->id;
     }
 
-    /**
-     * Proposition d'un sujet de mémoire : étudiant ou enseignant.
-     */
     public function create(User $user): bool
     {
         return $user->can('memoires.proposer') || $user->hasRole('enseignant_encadreur');
     }
 
-    /**
-     * Validation du sujet, rejet, affectation encadreur.
-     */
     public function valider(User $user): bool
     {
         return $user->can('memoires.valider');

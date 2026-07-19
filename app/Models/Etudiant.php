@@ -19,7 +19,6 @@ class Etudiant extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Un étudiant peut avoir plusieurs stages au fil de sa scolarité mais seulement un stage actif à la fois Cette relation permet de récupérer tous les stages d'un étudiant
     public function stages()
     {
         return $this->hasMany(Stage::class);

@@ -8,9 +8,6 @@ use Illuminate\Http\Request;
 
 class SoutenanceNoteController extends Controller
 {
-    /**
-     * Grille de notation : chaque membre du jury note plusieurs critères.
-     */
     public function store(Request $request, Soutenance $soutenance)
     {
         $this->authorize('noter', $soutenance);

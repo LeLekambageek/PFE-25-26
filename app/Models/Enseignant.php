@@ -20,7 +20,6 @@ class Enseignant extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Un enseignant peut encadrer plusieurs stages à la fois,
     public function stagesEncadres(): HasMany
     {
         return $this->hasMany(Stage::class, 'encadreur_id');

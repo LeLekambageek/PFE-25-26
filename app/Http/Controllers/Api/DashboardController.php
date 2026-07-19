@@ -13,10 +13,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardController extends Controller
 {
-    /**
-     * Vue d'ensemble : indicateurs clés Mémoires + Soutenances.
-     * Accessible aux profils décisionnels (admin, responsable de formation).
-     */
     public function apercu(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -27,9 +23,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Nombre de mémoires par statut (proposé, validé, en cours, corrections, validé final, soutenu, rejeté).
-     */
     public function memoiresParStatut(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -44,9 +37,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Taux d'encadrement : nombre de mémoires encadrés par enseignant.
-     */
     public function tauxEncadrement(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -62,9 +52,6 @@ class DashboardController extends Controller
         return response()->json($repartition);
     }
 
-    /**
-     * Planning des soutenances à venir (statut planifiee, triées par date).
-     */
     public function planningSoutenances(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -88,9 +75,6 @@ class DashboardController extends Controller
         return response()->json($soutenances);
     }
 
-    /**
-     * Répartition des résultats/mentions des soutenances déjà publiées.
-     */
     public function resultatsSoutenances(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -109,9 +93,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Indicateur de délai moyen entre proposition du sujet et soutenance (en jours).
-     */
     public function delaisMoyens(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -128,9 +109,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Export PDF du tableau de bord (nécessite composer require barryvdh/laravel-dompdf).
-     */
     public function exporterPdf(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -163,9 +141,6 @@ class DashboardController extends Controller
         return $pdf->download('tableau-de-bord-'.now()->format('Ymd_His').'.pdf');
     }
 
-    /**
-     * Export Excel (.xlsx) des mémoires par statut (nécessite composer require maatwebsite/excel).
-     */
     public function exporterExcel(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -173,9 +148,6 @@ class DashboardController extends Controller
         return Excel::download(new MemoiresParStatutExport, 'memoires-par-statut-'.now()->format('Ymd_His').'.xlsx');
     }
 
-    /**
-     * Export CSV natif (aucune dépendance) : fonctionne immédiatement, s'ouvre dans Excel.
-     */
     public function exporterCsv(Request $request)
     {
         $this->autoriserAccesDashboard($request);
@@ -186,7 +158,6 @@ class DashboardController extends Controller
 
         return response()->streamDownload(function () use ($memoires) {
             $handle = fopen('php://output', 'w');
-            // BOM UTF-8 pour un affichage correct des accents dans Excel
             fwrite($handle, "\xEF\xBB\xBF");
             fputcsv($handle, ['ID', 'Titre', 'Étudiant', 'Encadreur', 'Statut', 'Date proposition']);
 
@@ -205,10 +176,6 @@ class DashboardController extends Controller
         }, $filename, ['Content-Type' => 'text/csv']);
     }
 
-    /**
-     * Données formatées pour les librairies de graphiques (recharts, chart.js...)
-     * côté React : tableaux d'objets {label, value} plutôt que des maps associatives.
-     */
     public function graphiques(Request $request)
     {
         $this->autoriserAccesDashboard($request);

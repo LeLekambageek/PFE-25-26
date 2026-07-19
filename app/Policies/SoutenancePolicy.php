@@ -22,9 +22,6 @@ class SoutenancePolicy
             || $soutenance->estMembreDuJury($user);
     }
 
-    /**
-     * Planification d'une soutenance : responsable de formation / admin.
-     */
     public function create(User $user): bool
     {
         return $user->can('soutenances.planifier');
@@ -40,25 +37,16 @@ class SoutenancePolicy
         return $user->hasRole('admin_general');
     }
 
-    /**
-     * Composition du jury.
-     */
     public function gererJury(User $user): bool
     {
         return $user->can('soutenances.planifier');
     }
 
-    /**
-     * Notation : uniquement un membre du jury affecté à CETTE soutenance.
-     */
     public function noter(User $user, Soutenance $soutenance): bool
     {
         return $user->can('soutenances.noter') && $soutenance->estMembreDuJury($user);
     }
 
-    /**
-     * Publication des résultats : responsable de formation / admin.
-     */
     public function publierResultats(User $user): bool
     {
         return $user->can('soutenances.publier_resultats');

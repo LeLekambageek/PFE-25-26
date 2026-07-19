@@ -16,25 +16,16 @@ class MemoireVersionPolicy
             || $memoire->encadreur_id === $user->id;
     }
 
-    /**
-     * Dépôt d'une nouvelle version : uniquement l'étudiant propriétaire du mémoire.
-     */
     public function create(User $user, MemoireVersion $version = null): bool
     {
         return $user->can('memoires.deposer_version');
     }
 
-    /**
-     * Ajout d'une correction/annotation : uniquement l'encadreur affecté.
-     */
     public function corriger(User $user, MemoireVersion $version): bool
     {
         return $user->can('memoires.corriger') && $version->memoire->encadreur_id === $user->id;
     }
 
-    /**
-     * Validation finale de la version (encadreur ou responsable de formation).
-     */
     public function validerFinale(User $user, MemoireVersion $version): bool
     {
         return $version->memoire->encadreur_id === $user->id

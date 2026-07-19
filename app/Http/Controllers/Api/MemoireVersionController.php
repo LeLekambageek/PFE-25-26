@@ -11,9 +11,6 @@ use Illuminate\Support\Facades\Storage;
 
 class MemoireVersionController extends Controller
 {
-    /**
-     * Liste des versions déposées pour un mémoire (V1, V2, V3, finale).
-     */
     public function index(Request $request, Memoire $memoire)
     {
         $this->authorize('view', $memoire);
@@ -21,9 +18,6 @@ class MemoireVersionController extends Controller
         return response()->json($memoire->versions()->with('corrections.auteur')->get());
     }
 
-    /**
-     * Dépôt d'une nouvelle version par l'étudiant.
-     */
     public function store(Request $request, Memoire $memoire)
     {
         $this->authorize('create', MemoireVersion::class);
@@ -55,9 +49,6 @@ class MemoireVersionController extends Controller
         return response()->json($version, 201);
     }
 
-    /**
-     * Ajout d'une correction/annotation par l'encadreur.
-     */
     public function corriger(Request $request, MemoireVersion $version)
     {
         $this->authorize('corriger', $version);
@@ -80,9 +71,6 @@ class MemoireVersionController extends Controller
         return response()->json($correction, 201);
     }
 
-    /**
-     * Validation finale de la version par l'encadreur / chef de département.
-     */
     public function validerFinale(Request $request, MemoireVersion $version)
     {
         $this->authorize('validerFinale', $version);
@@ -93,9 +81,6 @@ class MemoireVersionController extends Controller
         return response()->json($version);
     }
 
-    /**
-     * Téléchargement du fichier d'une version.
-     */
     public function download(Request $request, MemoireVersion $version)
     {
         $this->authorize('view', $version);

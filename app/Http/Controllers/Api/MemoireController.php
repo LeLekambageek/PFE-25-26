@@ -9,9 +9,6 @@ use Illuminate\Http\Request;
 
 class MemoireController extends Controller
 {
-    /**
-     * Liste des mémoires, filtrée selon le rôle de l'utilisateur connecté.
-     */
     public function index(Request $request)
     {
         $this->authorize('viewAny', Memoire::class);
@@ -24,7 +21,6 @@ class MemoireController extends Controller
         } elseif ($user->hasRole('enseignant_encadreur') && ! $user->hasAnyRole(['admin_general', 'responsable_formation'])) {
             $query->where('encadreur_id', $user->id);
         }
-        // admin_general et responsable_formation voient tout
 
         return response()->json($query->latest()->paginate(15));
     }
@@ -36,9 +32,6 @@ class MemoireController extends Controller
         return response()->json($memoire->load(['etudiant', 'encadreur', 'versions.corrections', 'soutenance']));
     }
 
-    /**
-     * Proposition d'un sujet de mémoire (étudiant ou enseignant).
-     */
     public function store(Request $request)
     {
         $this->authorize('create', Memoire::class);
@@ -59,9 +52,6 @@ class MemoireController extends Controller
         return response()->json($memoire, 201);
     }
 
-    /**
-     * Validation pédagogique du sujet proposé.
-     */
     public function valider(Request $request, Memoire $memoire)
     {
         $this->authorize('valider', Memoire::class);
@@ -79,9 +69,6 @@ class MemoireController extends Controller
         return response()->json($memoire);
     }
 
-    /**
-     * Rejet du sujet proposé.
-     */
     public function rejeter(Request $request, Memoire $memoire)
     {
         $this->authorize('valider', Memoire::class);
@@ -99,9 +86,6 @@ class MemoireController extends Controller
         return response()->json($memoire);
     }
 
-    /**
-     * Affectation d'un encadreur selon compétences/disponibilités.
-     */
     public function affecterEncadreur(Request $request, Memoire $memoire)
     {
         $this->authorize('affecterEncadreur', Memoire::class);

@@ -15,9 +15,6 @@ class ProcesVerbalPolicy
             || $pv->soutenance->estMembreDuJury($user);
     }
 
-    /**
-     * Génération du PV : responsable de formation, admin, ou membre du jury de CETTE soutenance.
-     */
     public function generer(User $user, Soutenance $soutenance): bool
     {
         return $user->hasAnyRole(['admin_general', 'responsable_formation'])
@@ -29,9 +26,6 @@ class ProcesVerbalPolicy
         return $user->hasRole('admin_general') || $pv->genere_par_id === $user->id;
     }
 
-    /**
-     * Signature : admin, responsable de formation, ou membre du jury de la soutenance concernée.
-     */
     public function signer(User $user, ProcesVerbal $pv): bool
     {
         return $user->hasAnyRole(['admin_general', 'responsable_formation'])

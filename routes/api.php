@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MemoireVersionController;
 use App\Http\Controllers\Api\SoutenanceController;
 use App\Http\Controllers\Api\SoutenanceNoteController;
 use App\Http\Controllers\Api\ProcesVerbalController;
+use App\Http\Controllers\Api\StageController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
@@ -17,6 +18,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('memoires/{memoire}/valider', [MemoireController::class, 'valider']);
     Route::post('memoires/{memoire}/rejeter', [MemoireController::class, 'rejeter']);
     Route::post('memoires/{memoire}/affecter-encadreur', [MemoireController::class, 'affecterEncadreur']);
+    Route::apiResource('stages', StageController::class)->only(['index', 'store']);
+    Route::post('stages/{stage}/valider', [StageController::class, 'validerStage']);
+    Route::post('stages/{stage}/affecter-encadreur', [StageController::class, 'affecterEncadreur']);
     Route::get('memoires/{memoire}/versions', [MemoireVersionController::class, 'index']);
     Route::post('memoires/{memoire}/versions', [MemoireVersionController::class, 'store']);
     Route::post('versions/{version}/corriger', [MemoireVersionController::class, 'corriger']);
