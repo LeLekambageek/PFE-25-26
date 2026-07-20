@@ -15,6 +15,7 @@ class Memoire extends Model
     protected $fillable = [
         'titre', 'description', 'etudiant_id', 'encadreur_id', 'propose_par_id',
         'statut', 'date_proposition', 'date_validation', 'commentaire_validation',
+        'eligible_soutenance', 'date_eligibilite_soutenance',
     ];
 
     protected function casts(): array
@@ -22,6 +23,8 @@ class Memoire extends Model
         return [
             'date_proposition' => 'datetime',
             'date_validation' => 'datetime',
+            'eligible_soutenance' => 'boolean',
+            'date_eligibilite_soutenance' => 'datetime',
         ];
     }
 
@@ -63,8 +66,8 @@ class Memoire extends Model
     public function peutDemanderSoutenance(): bool
     {
         return $this->statut === 'valide_final'
-            && ! $this->soutenance()->exists()
-            && (int) optional($this->derniereVersion)->pourcentage_avancement >= 80;
+            && $this->eligible_soutenance === true
+            && ! $this->soutenance()->exists();
     }
 
     public function estVerrouillePourSoutenance(): bool

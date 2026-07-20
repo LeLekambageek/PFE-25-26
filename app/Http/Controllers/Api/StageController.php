@@ -41,7 +41,6 @@ class StageController extends Controller
         $data = $request->validate([
             'etudiant_id' => 'required|exists:etudiants,id',
             'entreprise_id' => 'required|exists:entreprises,id',
-            'encadreur_id' => 'nullable|exists:enseignants,id',
             'titre' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date_debut' => 'required|date',
@@ -53,17 +52,7 @@ class StageController extends Controller
         $notificationService = app(NotificationService::class);
         $notificationService->affectationStage($stage);
 
-        if (! empty($data['encadreur_id'])) {
-            $encadrement = Encadrement::firstOrCreate([
-                'etudiant_id' => $data['etudiant_id'],
-                'enseignant_id' => $data['encadreur_id'],
-                'type' => 'stage',
-            ], ['statut' => 'actif']);
-
-            $notificationService->affectationEncadreur($encadrement);
-        }
-
-        return response()->json($stage->load(['etudiant.user', 'entreprise', 'encadreur.user']), 201);
+        return response()->json($stage->load(['etudiant.user', 'entreprise']), 201);
     }
 
     public function validerStage(Request $request, Stage $stage)
@@ -81,7 +70,17 @@ class StageController extends Controller
         $data = $request->validate(['encadreur_id' => 'required|exists:enseignants,id']);
         $stage = $this->stageService->affecterEncadreur($stage, $data['encadreur_id']);
 
-        return response()->json($stage);
+        $encadrement = \App\Models\Encadrement::firstOrCreate([
+            'etudiant_id' => $stage->etudiant_id,
+            'enseignant_id' => $data['encadreur_id'],
+            'type' => 'stage',
+        ], ['statut' => 'actif']);
+
+        $encadrement->update(['statut' => 'actif']);
+
+        app(NotificationService::class)->affectationEncadreur($encadrement);
+
+        return response()->json($stage->load(['etudiant.user', 'entreprise', 'encadreur.user']));
     }
 
     public function ajouterEntreeJournal(Request $request, Stage $stage)

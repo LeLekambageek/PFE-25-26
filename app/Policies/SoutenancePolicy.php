@@ -10,13 +10,13 @@ class SoutenancePolicy
     public function viewAny(User $user): bool
     {
         return $user->hasAnyRole([
-            'admin_general', 'responsable_formation', 'enseignant_encadreur', 'etudiant', 'jury_soutenance',
+            'administration', 'enseignant_encadreur', 'etudiant', 'jury_soutenance',
         ]);
     }
 
     public function view(User $user, Soutenance $soutenance): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation'])
+        return $user->hasRole('administration')
             || $soutenance->memoire->etudiant_id === $user->id
             || $soutenance->memoire->encadreur_id === $user->id
             || $soutenance->estMembreDuJury($user);
@@ -37,7 +37,7 @@ class SoutenancePolicy
 
     public function delete(User $user, Soutenance $soutenance): bool
     {
-        return $user->hasRole('admin_general');
+        return $user->hasRole('administration');
     }
 
     /**

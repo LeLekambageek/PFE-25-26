@@ -25,4 +25,14 @@ class UserPolicy
     {
         return $user->can('utilisateurs.consulter');
     }
+
+    public function updateUser(User $user): bool
+    {
+        return $user->can('utilisateurs.modifier');
+    }
+
+    public function deleteUser(User $user): bool
+    {
+        return $user->can('utilisateurs.supprimer');
+    }
 }

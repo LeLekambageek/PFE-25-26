@@ -21,8 +21,10 @@ class MemoireController extends Controller
 
         if ($user->hasRole('etudiant')) {
             $query->where('etudiant_id', $user->id);
-        } elseif ($user->hasRole('enseignant_encadreur') && ! $user->hasAnyRole(['admin_general', 'responsable_formation'])) {
+        } elseif ($user->hasRole('enseignant_encadreur') && ! $user->hasRole('administration')) {
             $query->where('encadreur_id', $user->id);
+        } elseif ($user->hasRole('administration')) {
+            $query->whereIn('statut', ['valide', 'valide_final']);
         }
 
         return response()->json($query->latest()->paginate(15));
@@ -192,6 +194,22 @@ class MemoireController extends Controller
         ]);
 
         return response()->json($memoire->load('encadreur'));
+    }
+
+    /**
+     * Geste explicite et distinct de l'encadreur qui autorise l'étudiant à
+     * demander un créneau de soutenance (indépendant du pourcentage d'avancement).
+     */
+    public function accorderEligibiliteSoutenance(Request $request, Memoire $memoire)
+    {
+        $this->authorize('accorderEligibiliteSoutenance', $memoire);
+
+        $memoire->update([
+            'eligible_soutenance' => true,
+            'date_eligibilite_soutenance' => now(),
+        ]);
+
+        return response()->json($memoire);
     }
 
     public function update(Request $request, Memoire $memoire)

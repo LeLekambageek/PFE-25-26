@@ -30,32 +30,15 @@ class RoleAndPermissionSeeder extends Seeder
             'utilisateurs.consulter', 'utilisateurs.creer', 'utilisateurs.modifier',
             'utilisateurs.desactiver', 'utilisateurs.supprimer',
             'utilisateurs.attribuer_role', 'utilisateurs.retirer_role',
-            'parametres.gerer',
+            'parametres.gerer','offres.gerer', 'offres.consulter',
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        $admin = Role::firstOrCreate(['name' => 'admin_general']);
+        $admin = Role::firstOrCreate(['name' => 'administration']);
         $admin->givePermissionTo(Permission::all());
-
-        $responsableFormation = Role::firstOrCreate(['name' => 'responsable_formation']);
-        $responsableFormation->givePermissionTo([
-            'stages.suivre', 'stages.valider', 'stages.affecter_encadreur',
-            'encadrements.gerer', 'encadrements.consulter',
-            'memoires.valider',
-            'soutenances.planifier', 'soutenances.publier_resultats',
-            'dashboards.consulter',
-            'bibliotheque.consulter', 'bibliotheque.archiver',
-            'entreprises.consulter',
-        ]);
-
-        $responsableRelationEntreprise = Role::firstOrCreate(['name' => 'responsable_relation_entreprise']);
-        $responsableRelationEntreprise->givePermissionTo([
-            'entreprises.consulter', 'entreprises.ajouter', 'entreprises.modifier', 'entreprises.supprimer',
-            'stages.suivre',
-        ]);
 
         $encadreur = Role::firstOrCreate(['name' => 'enseignant_encadreur']);
         $encadreur->givePermissionTo([
@@ -72,12 +55,10 @@ class RoleAndPermissionSeeder extends Seeder
             'memoires.proposer', 'memoires.deposer_version',
             'encadrements.consulter',
             'bibliotheque.consulter',
+            'offres.consulter',
         ]);
 
-        $entreprise = Role::firstOrCreate(['name' => 'entreprise_partenaire']);
-        $entreprise->givePermissionTo(['stages.evaluer']);
-
         $jury = Role::firstOrCreate(['name' => 'jury_soutenance']);
-        $jury->givePermissionTo(['soutenances.noter']);
+        $jury->givePermissionTo(['soutenances.noter', 'bibliotheque.consulter']);
     }
 }

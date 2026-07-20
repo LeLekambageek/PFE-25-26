@@ -11,7 +11,7 @@ class MemoireVersionPolicy
     {
         $memoire = $version->memoire;
 
-        return $user->hasAnyRole(['admin_general', 'responsable_formation'])
+        return $user->hasRole('administration')
             || $memoire->etudiant_id === $user->id
             || $memoire->encadreur_id === $user->id;
     }
@@ -33,11 +33,11 @@ class MemoireVersionPolicy
     }
 
     /**
-     * Validation finale de la version (encadreur ou responsable de formation).
+     * Validation finale de la version (encadreur affecté ou administration).
      */
     public function validerFinale(User $user, MemoireVersion $version): bool
     {
         return $version->memoire->encadreur_id === $user->id
-            || $user->hasRole('responsable_formation');
+            || $user->hasRole('administration');
     }
 }

@@ -39,6 +39,29 @@ class AuthController extends Controller
         return response()->json(['message' => 'Déconnecté.']);
     }
 
+    public function changerMotDePasse(Request $request)
+    {
+        $data = $request->validate([
+            'mot_de_passe_actuel' => 'required|string',
+            'mot_de_passe' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($data['mot_de_passe_actuel'], $user->password)) {
+            throw ValidationException::withMessages([
+                'mot_de_passe_actuel' => ['Mot de passe actuel incorrect.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($data['mot_de_passe']),
+            'must_change_password' => false,
+        ]);
+
+        return response()->json(['message' => 'Mot de passe modifié avec succès.']);
+    }
+
     public function me(Request $request)
     {
         return response()->json($request->user()->load('roles', 'permissions'));

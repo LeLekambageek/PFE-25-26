@@ -24,13 +24,9 @@ class MemoireSoutenanceSeeder extends Seeder
             ['email' => 'admin@epfafrica.test'],
             ['name' => 'Amath Admin', 'password' => Hash::make('password')]
         );
-        $admin->syncRoles(['admin_general']);
+        $admin->syncRoles(['administration']);
 
-        $responsable = User::firstOrCreate(
-            ['email' => 'responsable@epfafrica.test'],
-            ['name' => 'Fatou Responsable', 'password' => Hash::make('password')]
-        );
-        $responsable->syncRoles(['responsable_formation']);
+        $responsable = $admin;
 
         $encadreurs = collect(['Moussa Diop', 'Aissatou Ba', 'Ibrahima Fall'])->map(function ($nom, $i) {
             $user = User::firstOrCreate(

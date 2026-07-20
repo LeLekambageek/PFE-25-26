@@ -9,12 +9,12 @@ class EtudiantPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation', 'enseignant_encadreur']);
+        return $user->hasAnyRole(['administration', 'enseignant_encadreur']);
     }
 
     public function view(User $user, Etudiant $etudiant): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation', 'enseignant_encadreur'])
+        return $user->hasAnyRole(['administration', 'enseignant_encadreur'])
             || $etudiant->user_id === $user->id;
     }
 }

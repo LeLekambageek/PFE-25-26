@@ -21,9 +21,9 @@ class SoutenanceController extends Controller
 
         if ($user->hasRole('etudiant')) {
             $query->whereHas('memoire', fn ($q) => $q->where('etudiant_id', $user->id));
-        } elseif ($user->hasRole('jury_soutenance') && ! $user->hasAnyRole(['admin_general', 'responsable_formation'])) {
+        } elseif ($user->hasRole('jury_soutenance') && ! $user->hasRole('administration')) {
             $query->whereHas('jury', fn ($q) => $q->where('user_id', $user->id));
-        } elseif ($user->hasRole('enseignant_encadreur') && ! $user->hasAnyRole(['admin_general', 'responsable_formation'])) {
+        } elseif ($user->hasRole('enseignant_encadreur') && ! $user->hasRole('administration')) {
             $query->whereHas('memoire', fn ($q) => $q->where('encadreur_id', $user->id));
         }
 

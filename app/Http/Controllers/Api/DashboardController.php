@@ -241,7 +241,7 @@ class DashboardController extends Controller
 
     private function autoriserAccesDashboard(Request $request): void
     {
-        if (! $request->user()->hasAnyRole(['admin_general', 'responsable_formation'])) {
+        if (! $request->user()->hasRole('administration')) {
             abort(403, "Accès réservé aux profils décisionnels (administrateur / responsable de formation).");
         }
     }

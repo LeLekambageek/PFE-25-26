@@ -9,7 +9,7 @@ class EncadrementPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('encadrements.consulter') || $user->hasRole('admin_general');
+        return $user->can('encadrements.consulter') || $user->hasRole('administration');
     }
 
     public function view(User $user, Encadrement $encadrement): bool
@@ -20,7 +20,7 @@ class EncadrementPolicy
         if ($user->hasRole('enseignant_encadreur')) {
             return $user->enseignant?->id === $encadrement->enseignant_id;
         }
-        return $user->hasAnyRole(['admin_general', 'responsable_formation']);
+        return $user->hasRole('administration');
     }
 
     public function create(User $user): bool

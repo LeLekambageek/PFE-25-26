@@ -64,10 +64,8 @@ class ProcesVerbalController extends Controller
         $filename = 'pv_soutenance_'.$soutenance->id.'_'.now()->format('Ymd_His').'.pdf';
         $path = 'pv_soutenances/'.$filename;
 
-        // TODO: brancher la génération réelle du PDF (ex: barryvdh/laravel-dompdf)
-        // $pdf = Pdf::loadView('pdf.proces-verbal', $data);
-        // Storage::disk('public')->put($path, $pdf->output());
-        Storage::disk('public')->put($path, 'Procès-verbal de soutenance');
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.proces-verbal', $data);
+        Storage::disk('public')->put($path, $pdf->output());
 
         $procesVerbal = ProcesVerbal::create([
             'soutenance_id' => $soutenance->id,
@@ -136,7 +134,7 @@ class ProcesVerbalController extends Controller
     public function getByEtudiant(Request $request, int $etudiantId)
     {
         $user = $request->user();
-        if ($user->id !== $etudiantId && ! $user->hasAnyRole(['admin_general', 'responsable_formation'])) {
+        if ($user->id !== $etudiantId && ! $user->hasRole('administration')) {
             abort(403);
         }
 
@@ -163,8 +161,7 @@ class ProcesVerbalController extends Controller
 
         $user = $request->user();
         $role = match (true) {
-            $user->hasRole('admin_general') => 'Administrateur',
-            $user->hasRole('responsable_formation') => 'Responsable de formation',
+            $user->hasRole('administration') => 'Administration',
             default => optional($soutenance->jury()->where('user_id', $user->id)->first())->role_jury ?? 'Membre',
         };
 

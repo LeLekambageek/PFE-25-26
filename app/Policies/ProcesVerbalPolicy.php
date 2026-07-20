@@ -10,7 +10,7 @@ class ProcesVerbalPolicy
 {
     public function view(User $user, ProcesVerbal $pv): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation'])
+        return $user->hasRole('administration')
             || $pv->soutenance->memoire->etudiant_id === $user->id
             || $pv->soutenance->estMembreDuJury($user);
     }
@@ -20,13 +20,13 @@ class ProcesVerbalPolicy
      */
     public function generer(User $user, Soutenance $soutenance): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation'])
+        return $user->hasRole('administration')
             || $soutenance->estMembreDuJury($user);
     }
 
     public function delete(User $user, ProcesVerbal $pv): bool
     {
-        return $user->hasRole('admin_general') || $pv->genere_par_id === $user->id;
+        return $user->hasRole('administration') || $pv->genere_par_id === $user->id;
     }
 
     /**
@@ -34,7 +34,7 @@ class ProcesVerbalPolicy
      */
     public function signer(User $user, ProcesVerbal $pv): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation'])
+        return $user->hasRole('administration')
             || $pv->soutenance->estMembreDuJury($user);
     }
 }

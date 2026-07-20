@@ -12,11 +12,11 @@ class CandidatureStage extends Model
 
     protected $table = 'candidatures_stage';
 
-    protected $fillable = [
-        'etudiant_id', 'entreprise_id', 'titre_poste', 'description',
-        'cv_path', 'lettre_motivation_path', 'statut', 'commentaire_admin',
-        'date_candidature', 'date_reponse', 'stage_id',
-    ];
+   protected $fillable = [
+    'etudiant_id', 'offre_id', 'entreprise_id', 'titre_poste', 'description',
+    'cv_path', 'lettre_motivation_path', 'statut', 'commentaire_admin',
+    'date_candidature', 'date_reponse', 'stage_id',
+];
 
     protected $casts = [
         'date_candidature' => 'datetime',
@@ -32,6 +32,11 @@ class CandidatureStage extends Model
     {
         return $this->belongsTo(Entreprise::class);
     }
+
+    public function offre(): BelongsTo
+{
+    return $this->belongsTo(OffreStage::class, 'offre_id');
+}
 
     public function stage(): BelongsTo
     {
@@ -52,4 +57,6 @@ class CandidatureStage extends Model
     {
         return $this->statut === 'retenue' && $this->stage_id === null;
     }
+
+    
 }

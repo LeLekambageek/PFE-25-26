@@ -10,12 +10,12 @@ class RapportStagePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation', 'enseignant_encadreur', 'etudiant']);
+        return $user->hasAnyRole(['administration', 'enseignant_encadreur', 'etudiant']);
     }
 
     public function view(User $user, RapportStage $rapport): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation'])
+        return $user->hasRole('administration')
             || $rapport->etudiant->user_id === $user->id
             || $rapport->stage->encadreur_id === $user->enseignant?->id;
     }
@@ -33,11 +33,11 @@ class RapportStagePolicy
     public function valider(User $user, RapportStage $rapport): bool
     {
         return ($user->can('stages.evaluer') && $rapport->stage->encadreur_id === $user->enseignant?->id)
-            || $user->hasAnyRole(['admin_general', 'responsable_formation']);
+            || $user->hasRole('administration');
     }
 
     public function delete(User $user, RapportStage $rapport): bool
     {
-        return $user->hasRole('admin_general') || $rapport->etudiant->user_id === $user->id;
+        return $user->hasRole('administration') || $rapport->etudiant->user_id === $user->id;
     }
 }

@@ -19,13 +19,16 @@ use App\Http\Controllers\Api\EncadreurController;
 use App\Http\Controllers\Api\AdministrationController;
 use App\Http\Controllers\Api\JuryController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\DocumentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\OffreStageController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/changer-mot-de-passe', [AuthController::class, 'changerMotDePasse']);
 
     // Stages
     Route::get('/stages', [StageController::class, 'index']);
@@ -55,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('memoires/{memoire}/rejeter', [MemoireController::class, 'rejeter']);
     Route::post('memoires/{memoire}/demander-modification', [MemoireController::class, 'demanderModification']);
     Route::post('memoires/{memoire}/affecter-encadreur', [MemoireController::class, 'affecterEncadreur']);
+    Route::post('memoires/{memoire}/accorder-eligibilite-soutenance', [MemoireController::class, 'accorderEligibiliteSoutenance']);
 
     // Versions de memoire
     Route::get('memoires/{memoire}/versions', [MemoireVersionController::class, 'index']);
@@ -85,21 +89,25 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('etudiants/{etudiantId}/proces-verbaux', [ProcesVerbalController::class, 'getByEtudiant']);
 
+    // Bibliotheque numerique (accessible a tous les roles, sans filtre par role)
+    Route::apiResource('documents', DocumentController::class);
+    Route::get('documents/{document}/download', [DocumentController::class, 'download']);
+
     // Entreprises
     Route::apiResource('entreprises', EntrepriseController::class);
 
     // Candidatures de stage
-    Route::apiResource('candidatures-stage', CandidatureStageController::class);
+    Route::apiResource('candidatures-stage', CandidatureStageController::class)->parameters(['candidatures-stage' => 'candidature']);
     Route::post('candidatures-stage/{candidature}/affecter-stage', [CandidatureStageController::class, 'affecterStage']);
 
     // Rapports de stage
-    Route::apiResource('rapports-stage', RapportStageController::class)->except(['update']);
+    Route::apiResource('rapports-stage', RapportStageController::class)->except(['update'])->parameters(['rapports-stage' => 'rapport']);
     Route::post('rapports-stage/{rapport}/corriger', [RapportStageController::class, 'corriger']);
     Route::post('rapports-stage/{rapport}/valider', [RapportStageController::class, 'valider']);
     Route::get('rapports-stage/{rapport}/download', [RapportStageController::class, 'download']);
 
     // Créneaux de soutenance
-    Route::apiResource('creneaux-soutenance', CreneauSoutenanceController::class);
+    Route::apiResource('creneaux-soutenance', CreneauSoutenanceController::class)->parameters(['creneaux-soutenance' => 'creneau']);
     Route::post('creneaux-soutenance/{creneau}/reserver', [CreneauSoutenanceController::class, 'reserver']);
     Route::post('creneaux-soutenance/{creneau}/annuler', [CreneauSoutenanceController::class, 'annuler']);
     Route::post('creneaux-soutenance/{creneau}/valider', [CreneauSoutenanceController::class, 'validerReservation']);
@@ -126,14 +134,21 @@ Route::middleware('auth:sanctum')->group(function () {
     // Administration
     Route::prefix('administration')->group(function () {
         Route::post('etudiants', [AdministrationController::class, 'creerCompteEtudiant']);
+        Route::put('etudiants/{id}', [AdministrationController::class, 'modifierCompteEtudiant']);
+        Route::delete('etudiants/{id}', [AdministrationController::class, 'supprimerCompteEtudiant']);
         Route::get('enseignants', [AdministrationController::class, 'gererComptesEnseignants']);
         Route::post('enseignants', [AdministrationController::class, 'creerCompteEnseignant']);
+        Route::put('enseignants/{id}', [AdministrationController::class, 'modifierCompteEnseignant']);
+        Route::delete('enseignants/{id}', [AdministrationController::class, 'supprimerCompteEnseignant']);
         Route::post('enseignants/{enseignantId}/role-encadreur', [AdministrationController::class, 'attribuerRoleEncadreur']);
         Route::put('stages/{etudiantId}/entreprise', [AdministrationController::class, 'associerEntrepriseEtudiant']);
         Route::get('memoires-eligibles-soutenance', [AdministrationController::class, 'memoiresValidesFinale']);
         Route::get('jury', [AdministrationController::class, 'gererComptesJury']);
         Route::post('jury', [AdministrationController::class, 'creerCompteJury']);
+        Route::put('jury/{id}', [AdministrationController::class, 'modifierCompteJury']);
+        Route::delete('jury/{id}', [AdministrationController::class, 'supprimerCompteJury']);
         Route::post('jury/{jury}/reactiver', [AdministrationController::class, 'reactiverJury']);
+        Route::post('users/{user}/reinitialiser-mot-de-passe', [AdministrationController::class, 'reinitialiserMotDePasse']);
     });
 
     // Jury 
@@ -169,4 +184,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('export/excel', [DashboardController::class, 'exporterExcel']);
         Route::get('export/csv', [DashboardController::class, 'exporterCsv']);
     });
+
+    Route::apiResource('offres-stage', OffreStageController::class);
 });

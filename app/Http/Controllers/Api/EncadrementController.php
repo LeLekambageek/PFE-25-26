@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Encadrement;
+use App\Models\Stage;
 use App\Services\EncadrementService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
@@ -37,6 +38,15 @@ class EncadrementController extends Controller
             'enseignant_id' => 'required|exists:enseignants,id',
             'type' => 'nullable|string|in:stage,memoire',
         ]);
+
+        // Ordre imposé : un stage doit d'abord être affecté à l'étudiant avant
+        // qu'un encadreur ne puisse lui être affecté.
+        if (($data['type'] ?? 'stage') === 'stage'
+            && ! Stage::where('etudiant_id', $data['etudiant_id'])->whereIn('statut', ['valide', 'en_cours'])->exists()) {
+            return response()->json([
+                'message' => "Aucun stage actif pour cet étudiant : affectez d'abord un stage avant l'encadreur.",
+            ], 422);
+        }
 
         $encadrement = $this->encadrementService->creer(
             $data['etudiant_id'],

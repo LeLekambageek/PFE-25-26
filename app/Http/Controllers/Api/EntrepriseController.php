@@ -12,7 +12,11 @@ class EntrepriseController extends Controller
     {
         $this->authorize('viewAny', Entreprise::class);
 
-        $query = Entreprise::withCount('stages')->orderBy('raison_sociale');
+        $query = Entreprise::withCount([
+            'stages',
+            'stages as stages_actifs_count' => fn ($q) => $q->whereIn('statut', ['valide', 'en_cours']),
+            'stages as stages_termines_count' => fn ($q) => $q->where('statut', 'termine'),
+        ])->orderBy('raison_sociale');
 
         if ($request->has('secteur')) {
             $query->where('secteur_activite', 'like', '%'.$request->secteur.'%');
@@ -25,7 +29,11 @@ class EntrepriseController extends Controller
     {
         $this->authorize('view', $entreprise);
 
-        return response()->json($entreprise->loadCount('stages'));
+        return response()->json($entreprise->loadCount([
+            'stages',
+            'stages as stages_actifs_count' => fn ($q) => $q->whereIn('statut', ['valide', 'en_cours']),
+            'stages as stages_termines_count' => fn ($q) => $q->where('statut', 'termine'),
+        ]));
     }
 
     public function store(Request $request)

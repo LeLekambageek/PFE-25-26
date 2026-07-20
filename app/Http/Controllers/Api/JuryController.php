@@ -28,7 +28,7 @@ class JuryController extends Controller
         $soutenances = Soutenance::whereHas('jury', function ($query) use ($user) {
             $query->where('user_id', $user->id)->where('actif', true);
         })
-        ->with(['memoire.etudiant.user', 'memoire.versions', 'jury' => function ($query) use ($user) {
+        ->with(['memoire.etudiant', 'memoire.versions', 'jury' => function ($query) use ($user) {
             $query->where('user_id', $user->id);
         }])
         ->where('statut', '!=', 'annulee')
@@ -52,7 +52,7 @@ class JuryController extends Controller
         }
 
         return response()->json($soutenance->load([
-            'memoire.etudiant.user',
+            'memoire.etudiant',
             'memoire.versions',
             'jury.membre',
             'notes'
@@ -120,6 +120,7 @@ class JuryController extends Controller
         $juryRow->validerNotes();
 
         if ($soutenance->tousLesJuryOntNote()) {
+            $soutenance->update(['statut' => 'terminee']);
             app(NotificationService::class)->tousJuryOntNote($soutenance);
         }
 

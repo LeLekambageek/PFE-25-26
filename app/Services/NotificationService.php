@@ -244,7 +244,7 @@ class NotificationService
     // Notifications Administration
     public function nouvelleCandidatureStage(\App\Models\CandidatureStage $candidature): void
     {
-        $admins = User::role(['admin_general', 'responsable_formation'])->get();
+        $admins = User::role('administration')->get();
         
         foreach ($admins as $admin) {
             $this->envoyerNotification(
@@ -260,7 +260,7 @@ class NotificationService
 
     public function validationFinaleMemoire(Memoire $memoire): void
     {
-        $admins = User::role(['admin_general', 'responsable_formation'])->get();
+        $admins = User::role('administration')->get();
         
         foreach ($admins as $admin) {
             $this->envoyerNotification(
@@ -276,7 +276,7 @@ class NotificationService
 
     public function soutenanceProgrammee(Soutenance $soutenance): void
     {
-        $admins = User::role(['admin_general', 'responsable_formation'])->get();
+        $admins = User::role('administration')->get();
         
         foreach ($admins as $admin) {
             $this->envoyerNotification(
@@ -292,7 +292,7 @@ class NotificationService
 
     public function juryIndisponible(Soutenance $soutenance): void
     {
-        $admins = User::role(['admin_general', 'responsable_formation'])->get();
+        $admins = User::role('administration')->get();
         
         foreach ($admins as $admin) {
             $this->envoyerNotification(
@@ -308,7 +308,7 @@ class NotificationService
 
     public function tousJuryOntNote(Soutenance $soutenance): void
     {
-        $admins = User::role(['admin_general', 'responsable_formation'])->get();
+        $admins = User::role('administration')->get();
         
         foreach ($admins as $admin) {
             $this->envoyerNotification(

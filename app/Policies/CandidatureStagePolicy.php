@@ -9,12 +9,12 @@ class CandidatureStagePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation']) || $user->hasRole('etudiant');
+        return $user->hasRole('administration') || $user->hasRole('etudiant');
     }
 
     public function view(User $user, CandidatureStage $candidature): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation'])
+        return $user->hasRole('administration')
             || $candidature->etudiant->user_id === $user->id;
     }
 
@@ -33,12 +33,12 @@ class CandidatureStagePolicy
 
     public function delete(User $user, CandidatureStage $candidature): bool
     {
-        return $user->hasRole('admin_general')
+        return $user->hasRole('administration')
             || ($candidature->etudiant->user_id === $user->id && $candidature->estEnAttente());
     }
 
     public function affecterStage(User $user): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation']);
+        return $user->hasRole('administration');
     }
 }

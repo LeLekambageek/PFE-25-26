@@ -13,14 +13,17 @@ class MemoirePolicy
     public function viewAny(User $user): bool
     {
         return $user->hasAnyRole([
-            'admin_general', 'responsable_formation', 'enseignant_encadreur', 'etudiant',
+            'administration', 'enseignant_encadreur', 'etudiant',
         ]);
     }
 
     public function view(User $user, Memoire $memoire): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation'])
-            || $memoire->etudiant_id === $user->id
+        if ($user->hasRole('administration')) {
+            return in_array($memoire->statut, ['valide', 'valide_final']);
+        }
+
+        return $memoire->etudiant_id === $user->id
             || $memoire->encadreur_id === $user->id;
     }
 
@@ -44,18 +47,26 @@ class MemoirePolicy
 
     public function affecterEncadreur(User $user): bool
     {
-        return $user->hasAnyRole(['admin_general', 'responsable_formation']);
+        return $user->hasRole('administration');
+    }
+
+    /**
+     * Autoriser la demande de soutenance : geste explicite et distinct de
+     * l'encadreur affecté à CE mémoire (indépendant du pourcentage d'avancement).
+     */
+    public function accorderEligibiliteSoutenance(User $user, Memoire $memoire): bool
+    {
+        return $user->hasRole('enseignant_encadreur') && $memoire->encadreur_id === $user->id;
     }
 
     public function update(User $user, Memoire $memoire): bool
     {
-        return $user->hasRole('admin_general')
-            || ($user->hasRole('responsable_formation'))
+        return $memoire->encadreur_id === $user->id
             || $memoire->etudiant_id === $user->id;
     }
 
     public function delete(User $user, Memoire $memoire): bool
     {
-        return $user->hasRole('admin_general');
+        return $memoire->encadreur_id === $user->id;
     }
 }

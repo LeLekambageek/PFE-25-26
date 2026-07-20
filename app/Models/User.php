@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'must_change_password', 'date_debut_acces', 'date_expiration'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,7 +30,27 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
+            'date_debut_acces' => 'datetime',
+            'date_expiration' => 'datetime',
         ];
+    }
+
+    /**
+     * Compte expiré (borne de fin de période de validité, utilisée pour les
+     * comptes jury) : bloque l'accès via EnsureAccountIsActive.
+     */
+    public function estExpire(): bool
+    {
+        return $this->date_expiration !== null && now()->greaterThan($this->date_expiration);
+    }
+
+    /**
+     * Compte pas encore actif (borne de début de période de validité).
+     */
+    public function accesPasEncoreActif(): bool
+    {
+        return $this->date_debut_acces !== null && now()->lessThan($this->date_debut_acces);
     }
 
     public function etudiant(): HasOne
