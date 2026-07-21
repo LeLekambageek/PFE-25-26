@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Encadrement extends Model
 {
@@ -13,6 +14,7 @@ class Encadrement extends Model
 
     protected $fillable = [
         'etudiant_id', 'enseignant_id', 'type', 'statut',
+        'encadrable_id', 'encadrable_type',
     ];
 
     public function etudiant(): BelongsTo
@@ -23,6 +25,11 @@ class Encadrement extends Model
     public function enseignant(): BelongsTo
     {
         return $this->belongsTo(Enseignant::class);
+    }
+
+    public function encadrable(): MorphTo
+    {
+        return $this->morphTo();
     }
 
     public function rendezVous(): HasMany

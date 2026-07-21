@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Encadrement;
+use App\Models\Memoire;
 use App\Models\Stage;
 use App\Services\EncadrementService;
 use App\Services\NotificationService;
@@ -18,7 +19,7 @@ class EncadrementController extends Controller
         $this->authorize('viewAny', Encadrement::class);
 
         $user = $request->user();
-        $query = Encadrement::query()->with(['etudiant.user', 'enseignant.user']);
+        $query = Encadrement::query()->with(['etudiant.user', 'enseignant.user', 'encadrable']);
 
         if ($user->hasRole('etudiant')) {
             $query->where('etudiant_id', $user->etudiant->id);
@@ -37,24 +38,38 @@ class EncadrementController extends Controller
             'etudiant_id' => 'required|exists:etudiants,id',
             'enseignant_id' => 'required|exists:enseignants,id',
             'type' => 'nullable|string|in:stage,memoire',
+            'memoire_id' => 'required_if:type,memoire|nullable|exists:memoires,id',
         ]);
+
+        $type = $data['type'] ?? 'stage';
 
         // Ordre imposé : un stage doit d'abord être affecté à l'étudiant avant
         // qu'un encadreur ne puisse lui être affecté.
-        if (($data['type'] ?? 'stage') === 'stage'
-            && ! Stage::where('etudiant_id', $data['etudiant_id'])->whereIn('statut', ['valide', 'en_cours'])->exists()) {
-            return response()->json([
-                'message' => "Aucun stage actif pour cet étudiant : affectez d'abord un stage avant l'encadreur.",
-            ], 422);
+        if ($type === 'stage') {
+            $stage = Stage::where('etudiant_id', $data['etudiant_id'])
+                ->whereIn('statut', ['valide', 'en_cours'])
+                ->latest()
+                ->first();
+
+            if (! $stage) {
+                return response()->json([
+                    'message' => "Aucun stage actif pour cet étudiant : affectez d'abord un stage avant l'encadreur.",
+                ], 422);
+            }
+
+            $encadrable = $stage;
+        } else {
+            $encadrable = Memoire::findOrFail($data['memoire_id']);
         }
 
         $encadrement = $this->encadrementService->creer(
             $data['etudiant_id'],
             $data['enseignant_id'],
-            $data['type'] ?? 'stage'
+            $type,
+            $encadrable
         );
 
-        return response()->json($encadrement, 201);
+        return response()->json($encadrement->load('encadrable'), 201);
     }
 
     /**
@@ -111,11 +126,11 @@ class EncadrementController extends Controller
 
     public function modifier(Request $request, Encadrement $encadrement)
     {
-    $this->authorize('update', $encadrement);
+        $this->authorize('update', $encadrement);
 
-    $data = $request->validate(['enseignant_id' => 'required|exists:enseignants,id']);
-    $encadrement = $this->encadrementService->modifier($encadrement, $data['enseignant_id']);
+        $data = $request->validate(['enseignant_id' => 'required|exists:enseignants,id']);
+        $encadrement = $this->encadrementService->modifier($encadrement, $data['enseignant_id']);
 
-    return response()->json($encadrement);
+        return response()->json($encadrement);
     }
 }
