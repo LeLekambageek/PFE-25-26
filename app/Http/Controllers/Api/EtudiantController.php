@@ -135,6 +135,6 @@ class EtudiantController extends Controller
             return response()->json(['message' => 'Les résultats ne sont pas encore publiés'], 403);
         }
 
-        return response()->json($soutenance->load(['notes', 'jury.membre']));
+        return response()->json($soutenance->load(['notes', 'jury.membre', 'procesVerbaux']));
     }
 }

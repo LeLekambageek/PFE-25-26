@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('memoires/{memoire}/versions', [MemoireVersionController::class, 'index']);
     Route::post('memoires/{memoire}/versions', [MemoireVersionController::class, 'store']);
     Route::post('versions/{version}/corriger', [MemoireVersionController::class, 'corriger']);
+    Route::post('versions/{version}/corrections', [MemoireVersionController::class, 'ajouterCommentaire']);
     Route::post('versions/{version}/valider-finale', [MemoireVersionController::class, 'validerFinale']);
     Route::get('versions/{version}/download', [MemoireVersionController::class, 'download']);
 
