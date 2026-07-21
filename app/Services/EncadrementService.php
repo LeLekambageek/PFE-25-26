@@ -5,16 +5,19 @@ namespace App\Services;
 use App\Models\Encadrement;
 use App\Models\EncadrementEntry;
 use App\Models\EncadrementRendezVous;
+use Illuminate\Database\Eloquent\Model;
 
 class EncadrementService
 {
-    public function creer(int $etudiantId, int $enseignantId, string $type = 'stage'): Encadrement
+    public function creer(int $etudiantId, int $enseignantId, string $type = 'stage', ?Model $encadrable = null): Encadrement
     {
         return Encadrement::create([
             'etudiant_id' => $etudiantId,
             'enseignant_id' => $enseignantId,
             'type' => $type,
             'statut' => 'actif',
+            'encadrable_id' => $encadrable?->id,
+            'encadrable_type' => $encadrable ? get_class($encadrable) : null,
         ]);
     }
 
@@ -44,8 +47,8 @@ class EncadrementService
 
     public function modifier(Encadrement $encadrement, int $enseignantId): Encadrement
     {
-    $encadrement->update(['enseignant_id' => $enseignantId]);
+        $encadrement->update(['enseignant_id' => $enseignantId]);
 
-    return $encadrement->fresh();
+        return $encadrement->fresh();
     }
 }

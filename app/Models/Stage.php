@@ -51,4 +51,9 @@ class Stage extends Model
     {
         return $this->statut === 'en_attente';
     }
+
+    public function encadrement()
+    {
+        return $this->morphOne(Encadrement::class, 'encadrable');
+    }
 }

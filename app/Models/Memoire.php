@@ -58,7 +58,7 @@ class Memoire extends Model
         return $this->hasOne(Soutenance::class);
     }
 
-    public function estProposeParEtudiant(): bool
+public function estProposeParEtudiant(): bool
     {
         return $this->propose_par_id === $this->etudiant_id;
     }
@@ -73,11 +73,15 @@ class Memoire extends Model
     public function estVerrouillePourSoutenance(): bool
     {
         $soutenance = $this->soutenance;
-
         if (! $soutenance || ! $soutenance->date_soutenance) {
             return false;
         }
 
         return now()->greaterThanOrEqualTo($soutenance->date_soutenance->copy()->startOfDay()->subDays(5));
+    }
+
+    public function encadrement()
+    {
+        return $this->morphOne(Encadrement::class, 'encadrable');
     }
 }
