@@ -116,15 +116,21 @@ class DashboardController extends Controller
     {
         $this->autoriserAccesDashboard($request);
 
-        $delais = Memoire::query()
+        $memoires = Memoire::query()
             ->join('soutenances', 'soutenances.memoire_id', '=', 'memoires.id')
             ->whereNotNull('memoires.date_proposition')
-            ->select(DB::raw('julianday(soutenances.date_soutenance) - julianday(memoires.date_proposition) as jours'))
+            ->select('soutenances.date_soutenance', 'memoires.date_proposition')
             ->get();
 
+        $joursList = $memoires->map(function ($m) {
+            $dateSoutenance = \Carbon\Carbon::parse($m->date_soutenance);
+            $dateProposition = \Carbon\Carbon::parse($m->date_proposition);
+            return $dateProposition->diffInDays($dateSoutenance);
+        });
+
         return response()->json([
-            'delai_moyen_jours' => $delais->isNotEmpty() ? round($delais->avg('jours'), 1) : null,
-            'nombre_cas' => $delais->count(),
+            'delai_moyen_jours' => $joursList->isNotEmpty() ? round($joursList->avg(), 1) : null,
+            'nombre_cas' => $joursList->count(),
         ]);
     }
 
