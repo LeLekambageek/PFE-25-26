@@ -112,6 +112,33 @@ class MemoireVersionController extends Controller
     }
 
     /**
+     * Ajout d'un commentaire/réponse sur une version de mémoire (étudiant, encadreur, administration).
+     */
+    public function ajouterCommentaire(Request $request, MemoireVersion $version)
+    {
+        $memoire = $version->memoire;
+        $user = $request->user();
+
+        if ($memoire->etudiant_id !== $user->id && $memoire->encadreur_id !== $user->id && !$user->hasRole('administration')) {
+            abort(403, "Vous n'avez pas l'autorisation d'ajouter un commentaire sur cette version.");
+        }
+
+        $data = $request->validate([
+            'commentaire' => 'required|string',
+            'type_correction' => 'nullable|string|max:100',
+        ]);
+
+        $correction = MemoireCorrection::create([
+            'memoire_version_id' => $version->id,
+            'auteur_id' => $user->id,
+            'commentaire' => $data['commentaire'],
+            'type_correction' => $data['type_correction'] ?? 'annotation',
+        ]);
+
+        return response()->json($correction->load('auteur'), 201);
+    }
+
+    /**
      * Validation finale de la version par l'encadreur / chef de département.
      * Exige un avancement d'au moins 80% et rend l'étudiant éligible à la
      * planification de sa soutenance.

@@ -42,6 +42,41 @@ class ProcesVerbalController extends Controller
             ], 422);
         }
 
+        if (is_null($soutenance->note_finale)) {
+            $moyenne = $soutenance->notes()->avg('note');
+            $mention = match (true) {
+                $moyenne >= 18 => 'Excellent',
+                $moyenne >= 16 => 'Très Bien',
+                $moyenne >= 14 => 'Bien',
+                $moyenne >= 12 => 'Assez Bien',
+                $moyenne >= 10 => 'Passable',
+                default => 'Ajourné',
+            };
+            $soutenance->update([
+                'note_finale' => round($moyenne, 2),
+                'mention' => $mention,
+                'resultats_publies' => true,
+            ]);
+            $soutenance->memoire->update(['statut' => 'soutenu']);
+
+            \App\Models\Document::firstOrCreate(
+                ['memoire_id' => $soutenance->memoire_id],
+                [
+                    'type_document' => 'memoire',
+                    'titre' => $soutenance->memoire->titre,
+                    'auteur' => $soutenance->memoire->etudiant->name,
+                    'annee' => now()->year,
+                    'mention' => $mention,
+                    'fichier_path' => optional($soutenance->memoire->derniereVersion)->fichier_path,
+                    'archive_par_id' => Auth::id(),
+                ]
+            );
+
+            app(\App\Services\NotificationService::class)->resultatsPublies($soutenance);
+
+            $soutenance->load(['memoire.etudiant', 'jury.membre', 'notes']);
+        }
+
         $request->validate([
             'commentaires' => 'nullable|string|max:1000',
         ]);
